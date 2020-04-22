@@ -10,29 +10,30 @@ class ManagingDataBase:
 		pass
 
 
-	def create(self, column, data):
+	def create(self, table, column, data):
 		"""In charge of the C part of CRUD (CREATE)
 
 		Args:
-
+			table (str) : In wich table data will be insert
 			column (tuple): In wich column(s) data will be insert
-			data (list of tuple): list of tuples containing data to insert
+			data (list of tuple): List of tuples containing data to insert
 
 		"""
 		pass
 
 
-	def read(self, table, *args):
+	def read(self, table, column, **kwargs):
 		"""In charge of the R part of CRUD (READ)
 
 		Args:
 
-			table (str): in wich table we need to search
-			*args: Variable number of colum(s) from where we want data
+			table (str): In wich table we need to read
+			column (tuple) : Column(s) to read
+			**kwargs : Variable number of kwargs to read some specific rows
 
 		Returns:
 
-			result (list of tuples): list of tuples containing data
+			result (cursor object): iterable containing data
 			
 		"""
 		pass

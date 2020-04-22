@@ -20,7 +20,7 @@ class InitDataBase:
 
 		"""
 		pass
-		
+
 
 	def create_user(self, USER):
 		"""Create an user related to our database

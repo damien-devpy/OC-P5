@@ -3,13 +3,23 @@
 import requests
 from configuration import CATEGORIES, PRODUCTS_NUM
 
-class ManagingAPI:
-	"""In charge of managing OpenFoodFacts API and collecting data"""
+class Catalogue:
+	"""In charge of managing OpenFoodFacts API, collecting data
+	and create a catalogue of products
+
+	"""
 
 	def __init__(self):
 
 		# list of tuples: useable data collected by _get_date() method
 		self._catalogue = _get_data(CATEGORIES, PRODUCTS_NUM)
+
+
+	catalogue = property(_get_catalogue)
+
+	def _get_catalogue(self):
+		# list of tuples: getter method
+		return self._catalogue
 
 
 	def _get_data(self, categories, products_num):
@@ -43,8 +53,3 @@ class ManagingAPI:
 		pass
 
 
-	catalogue = property(_get_catalogue)
-
-	def _get_catalogue(self):
-		# list of tuples: getter method
-		return self._catalogue
