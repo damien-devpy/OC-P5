@@ -9,8 +9,6 @@ INNER JOIN category_and_products
 ON product.barre_code = category_and_products.product_barre_code
 WHERE category_and_products.category_id = "choix_de_la_catégorie_par_utilisateur"
 
-SELECT (name) FROM product
-
 Affiche en détail un produit:
 
 SELECT (barre_code, name, nutrition_grade, brand, ingredients, quantity) FROM product
