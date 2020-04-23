@@ -10,7 +10,7 @@ class InitDataBase:
 		pass
 
 
-	def create_database(self, DATABASE):
+	def create_database(self, DATABASE, cursor_object):
 		"""Creating a local database
 		
 		Args:
@@ -18,17 +18,11 @@ class InitDataBase:
 		DATABASE (str): SQL file name containing instruction for
 			database creation
 
-		"""
-		pass
-
-
-	def create_user(self, USER):
-		"""Create an user related to our database
-		
-		Args:
-		
-		USER (dict): contains all information needed for user
-			creation (user, user password, host)
+		cursor_object (cursor object): Object from mysql.connector needed for DB interaction
 
 		"""
-		pass
+		ouverture du fichier DATABASE
+
+		lecture de chaque ligne du fichier
+
+		executer chaque ligne du fichier
