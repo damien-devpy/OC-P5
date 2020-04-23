@@ -22,15 +22,13 @@ class ManagingDataBase:
 		pass
 
 
-	def read(self, table, column, where=FALSE):
+	def read(self, table, column):
 		"""In charge of the R part of CRUD (READ)
 
 		Args:
 
 			table (str): In wich table we need to read
 			column (tuple) : Column(s) to read
-			where (str): Default to False. If not, containing part of query
-			to concatenate with the read SQL query
 
 		Returns:
 

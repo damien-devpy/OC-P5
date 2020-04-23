@@ -1,6 +1,6 @@
 # coding: utf-8
 
-import mysql.connector
+from mysql import connector
 from configuration import DATABASE, USER
 
 class InitDataBase:
