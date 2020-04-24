@@ -33,6 +33,8 @@ FROM (
 SELECT product.barre_code, product.nutrition_grade FROM product
 INNER JOIN category_and_products
 ON product.barre_code = category_and_products.product_barre_code
-INNER JOIN category_and_products as c_a_p2
-ON category_and_products.product_barre_code = c_a_p2.product_barre_code
-WHERE product.nutrition_grade < "nutrition_grade_from_product_to_substitute") as minimal_nutriscore;
+INNER JOIN category_and_products as c_a_p
+ON category_and_products.category_id = c_a_p.category_id
+WHERE product.nutrition_grade < "nutrition_grade_from_product_to_substitute"
+	AND category_and_products.category_id = "catégorie choisie"
+) as minimal_nutriscore;

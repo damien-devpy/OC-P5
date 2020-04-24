@@ -6,17 +6,18 @@ DATABASE = 'create_db.sql'
 USER = {'user':'***', 'password':'***', 'host':'localhost'}
 
 # Products will be from this categories
-CATEGORIES_TO_SCRAPE = {'pizzas',
-			  'sweet-spreads',
-			  'dairies',
-			  'meals',
-			  'cheeses',
-			  'salted-spreads',
-			  'fruit-juices',
-			  'sausages',
-			  'frozen-ready-made-meals',
-			  'rillettes'
+CATEGORIES_TO_SCRAPE = {'old-fashioned-crisps', #chips-a-l-ancienne 
+			  'hummus', # houmous
+			  'fr:compotes-pour-bebe',
+			  'white-hams', #jambons-blancs
+			  'pure-butter-brioche', #brioches-pur-beurre
+			  'fr:yaourts-sur-lit-de-fruits',
+			  'fr:saucissons-secs-pur-porc',
+			  'waffles', # gaufres
+			  'pestos', #sauces-pesto
+			  'rillettes',
 }
+
 
 # Number of page per categories we need to scrape
 PAGE = 1

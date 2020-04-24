@@ -40,7 +40,7 @@ def main():
 
 			afficher les substitutions
 
-			demander si l''utilsateur souhaite continuer
+			demander si l''utilisateur souhaite continuer
 
 
 definir fonction menu_principal():
