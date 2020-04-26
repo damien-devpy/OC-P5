@@ -1,74 +1,139 @@
 # coding: utf-8
 
+import mysql.connector
 from catalogue import Catalogue
-from mysql import connector
+from models import Product, Category, CategoryAndProduct, Substitution
+from manager import Manager
+
 
 def main():
-	"""Main function of the application
-	This where menu take place and user can :
-		- See product details
-		- Make a substitution and save it
-	"""
 
-	Création du catalogue produits <- Création d''un objet type Catalogue()
+	objet_catalogue <- Catalogue()
+	objet_product <- Product()
+	objet_category <- Category()
+	objet_cat_and_prod <- CategoryAndProduct()
+	manager <- Manager()
+	objet_substitution <- Substitution()
+	objet_mysql <- mysql.connector().connect("informations utilisateur")
 
-	tant que l''utilisateur souhaite continuer:
+	connexion à la base de donnée
+	objet_curseur <- objet_mysql.curseur()
 
-		choix_utilisateur <- fonction menu_principal()
+	créer la base de donnée (fichier 'create_db.sql')
+
+	menu_principal()
+
+
+def menu_principal:
+
+	afficher "Menu principal"
+	afficher "1. Choissisez un aliment à substituer"
+	afficher "2. Retrouvez vos précédentes substitutions"
+
+	choix_utilisateur <- entrée_utilisateur()
+
+	si 1:
+
+		choisir_un_aliment()
+
+	sinon:
+
+		anciennes_substitutions()
+
+def choisis_un_aliment:
+
+		récupérer les catégories en base
+
+		pagination
+
+		afficher "10 premières catégories"
+
+		choix_utilisateur <- entrée_utilisateur()
+
+		récupérer les produits en base de la catégorie choisie
+
+		afficher "Liste des produits"
+
+		choix_utilisateur <- entrée_utilisateur()
+
+		récupérer le détail du produit choisis
+
+		afficher "Détail du produit"
+
+		afficher "1. Substitution"
+
+		afficher "2. Retour au menu principal"
+
+		choix_utilisateur <- entrée_utilisateur()
 
 		si 1:
 
-			choix_utilisateur <- fonction menu_choix_utilisateur("afficher les catégories")
+			rechercher une substitution
 
-			choix_utilisateur <- fonction menu_choix_utilisateur("afficher les produits d'une catégorie", choix_utilisateur)
+			afficher "produit de substitution"
 
-			afficher en détail le produit
+			afficher "Enregistrement ?"
 
-			trouver_une_substitution(choix_utilisateur)
+			afficher "Retour au menu principal"
 
-			afficher le produit de substitution
-
-			proposer d''enregistrer la substitution
-
-			demande si l''utilisateur souhaite continuer
+			menu_principal()
 
 		fin si
 
-		sinon:
+		si 2 :
 
-			rechercher les substitutions
+			menu_principal()
 
-			afficher les substitutions
+		fin si
 
-			demander si l''utilisateur souhaite continuer
+def anciennes_substitutions():
+
+	rechercher toutes les substitutions
+
+	pagination
+
+	afficher "10 premières substitution"
+
+	afficher "1. Voir détail substitution"
+
+	afficher "2. Retour au menu principal"
+
+	si 1:
+
+		récupérer les détail des produits
+
+		afficher "Produits"
+
+		afficher "1. Retour aux substitutions"
+
+		afficher "2. Retour au menu principal"
+
+		si 1:
+
+			anciennes_substitutions()
+
+		fin si
+
+		si 2:
+
+			menu_principal()
+
+	fin si
+
+	si 2:
+
+		menu_principal()
+
+	fin si
 
 
-definir fonction menu_principal():
+def entrée_utilisateur():
 
-	afficher le menu principal :
+	Afficher "Question"
 
-		1 - Choisir un produit à substituer
-		2 - Consulter l''historique des substitutions
-
-	retourner le choix utilisateur
+	return input utilisateur
 
 
-definir fonction menu_choix_utilisateur(requete à utiliser, catégorie=False):
-	
-	si catégorie est vrai:
+if __name__ = "__main__":
 
-		liste <- produits retournés par la requête à utiliser
-
-	sinon 
-
-		liste <- catégorie retournées par la requête à utiliser
-
-	pour chaque élément dans la liste
-		afficher un numéro et l''élément
-	fin pour
-
-	retourner choix utilisateur
-
-
-if __name__ == "__main__":
 	main()
