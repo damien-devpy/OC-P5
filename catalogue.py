@@ -35,10 +35,18 @@ class Catalogue:
 
 				object_requests <- récupérer données ('url/catégorie/page.json?fields')
 
-				_processing_data(object_requests)
+				_processing_data(object_requests.json())
 
 
 	def _processing_data(self, raw_catalogue):
+		"""In charge of cleaning data and then add them to self._catalogue
+
+		Args:
+
+			raw_catalogue (dict): raw json data, from the API
+
+		"""
+
 
 		pour chaque produits dans raw_catalogue:
 
@@ -47,3 +55,7 @@ class Catalogue:
 				mettre en forme le produit
 
 				ajouter le produit à self._catalogue
+
+	def _modeling_data(self):
+		"""Storing data into models for insertion in DB
+		"""
