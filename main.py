@@ -2,72 +2,66 @@
 
 import mysql.connector
 from catalogue import Catalogue
-from models import Product, Category, CategoryAndProduct, Substitution
+from category import Category
+from product import Product
+from substitution import Substitution
+from categoryandproduct import CategoryAndProduct
+from modelinspection import ModelInspection
 from manager import Manager
 
 
 def main():
 
-	objet_manager <- Manager()
-	objet_catalogue <- Catalogue()
-	objet_product <- Product()
-	objet_category <- Category()
-	objet_cat_and_prod <- CategoryAndProduct()
-	manager <- Manager()
-	objet_substitution <- Substitution()
-	objet_inspection <- ModelInspection()
-	objet_mysql <- mysql.connector.connect("informations utilisateur")
+	connexion <- mysql.connector.connect("informations utilisateur")
 
-	connexion à la base de donnée
-	objet_curseur <- objet_mysql.curseur()
+	curseur <- connexion.cursor()
 	
 	ouvrir le fichier 'create_sql.db':
 		pour chaque ligne du fichier
-			objet_curseur <- executer la ligne
+			curseur <- executer la ligne
+
+	obj_catalogue <- Catalogue()
+	obj_model_inspection <- ModelInspection()
+	manager <- Manager()
 
 	#Insertion des catégories
 
-	Pour chaque catégorie du catalogue:
+	pour chaque catégorie dans obj_catalogue.categories_uniques:
 
-		modèle_catégorie <- catégorie
-		inspection du modèle_catégorie
-		liste_de_catégories_db <- insertion de la donnée
+		cat = Category(name=catégorie)
+		cat.save(manager, curseur)
 
-	objet_manager <- insérer (objet_curseur, 
-							  table, 
-							  inspection du modèle_catégories(colonnes), 
-							  liste_de_catégories_db
-							 )
+	fin pour
 
-	#Insertion des produits dans la table produit
-	#Et des données dans la table intermédiaire
+	#Insertion des produits
 
-	Pour chaque produit du catalogue:
+	pour chaque produit dans obj_catalogue.catalogue:
 
-		modèle_produit <- produit
-		inspection du modèle_produit
-		liste_de_produits_db <- insertion de la donnée
+		p = Product(**produit)
+		p.save(manager, curseur)
 
-	objet_manager <- insérer (objet_curseur,
-							  table,
-							  inspection du modèle produit(colonnes),
-							  liste_de_produits_db,
-							 )
+	fin pour
 
-	#Insertion des données dans la table intermédiaire
+	#Alimentation de la table intermédiaire
 
-	Récupérer la liste des catégories avec leurs id:
+	Category().read(manager, curseur)
 
-		liste_catégories_id <- object_manager <- selectionner (objet_curseur,
-															   table,
-															   inspection du modèle catégories(colonnes),
-															  )
+	pour chaque élément dans le curseur:
 
-		# TODO TODO TODO TODO TODO 
+		dictionnaire{id_cat, catégorie} <- enregistrer les éléments
 
+	fin pour
 
+	pour chaque produit dans obj_catalogue.catalogue:
 
+		pour chaque élément dans le dictionnaire(id_cat, catégorie):
 
+			si le produit appartient à la catégorie
+
+			c_a_p = CategoryAndProduct(category_id=id_cat, product_barre_code=produit['barre_code'])
+			c_a_p.save()
+
+	fin pour
 
 	menu_principal()
 
@@ -88,17 +82,18 @@ def menu_principal:
 
 		anciennes_substitutions()
 
-def choisis_un_aliment:
+def choisir_un_aliment:
 
-		récupérer les catégories en base
-
-		pagination
+		pagination de liste_categories
 
 		afficher "10 premières catégories"
 
 		choix_utilisateur <- entrée_utilisateur()
 
 		récupérer les produits en base de la catégorie choisie
+
+			categorie_utilisateur = CategoryAndProduct(category_id=choix_utilisateur)
+			categorie_utilisateur.read(manager, curseur, columns='product_barre_code', )
 
 		afficher "Liste des produits"
 

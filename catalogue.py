@@ -24,7 +24,7 @@ class Catalogue:
 
 		self._catalogue = _get_data()
 		self._categories_for_each_product = []
-		self._set_de_categories = {}
+		self.categories_uniques = set()
 
 
 	def _get_data(self):

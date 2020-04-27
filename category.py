@@ -4,30 +4,45 @@ class Category:
 	"""Model class of the category table in database
 	"""
 
-	def __init__(self):
+	TABLE_NAME = "category"
+
+	def __init__(self, id_cat=None, name):
 		"""init method
 
 		Attributes:
 
 			id (int): id column in category table
 			name (str): name column in category 
-			table_name (str): Table name this model represent
 
 		"""
 
-		pass
+		self._id = id_cat
+		self._name = name
 
-	def unpacking_values(self, data):
-		"""Public method in charge of unpacking values, from catalogue to model, or from DB to model
+	def save(self, manager_object, cursor_object):
+		"""Saving data in DB, through a manager
 
 		Args:
 
-		data (tuple): Contain data to unpack into attributes
+			manager_object (object manager): Gave access to insert method manager
+			cursor_object (object cursor): Needed for managing DB
 
 		"""
 
-		mettre ces attributs dans l''état(self, attr, value)
+		manager_object.insert(cursor_object, Category.TABLE_NAME, column_name, self._name)
 
+	def read(self, manager_object, cursor_object, columns='*'):
+		"""Reading data from DB, through a manager
 
+		Args:
 
-		pass
+			manager_object (object manager): Gave access to select method manager
+			cursor_object (object cursor): Needed for managing DB
+
+		"""
+
+		si columns == '*':
+
+			columns <- toutes les colonnes
+
+		manager_object.select(cursor_object, Category.TABLE_NAME, columns)

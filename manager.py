@@ -32,17 +32,11 @@ class Manager:
 			cursor_object (cursor object): need for managing DB
 			table (str): name of the table to read
 			columns (tuple of str): columns in wich we want to insert data
-			values (list of tuple): data to insert
+			values (tuple): data to insert
 			
 		"""
 
-		Démarrer une transaction
-
-			Pour chaque élément dans values:
-
 				cursor_object <- executer la requête : "INSERT INTO table (columns) VALUES (élément)"
-
-		Commit
 
 	def substitution(self):
 		"""Specifically in charge for looking a product substitution
