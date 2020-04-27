@@ -23,6 +23,8 @@ class Catalogue:
 		"""
 
 		self._catalogue = _get_data()
+		self._categories_for_each_product = []
+		self._set_de_categories = {}
 
 
 	def _get_data(self):
@@ -31,8 +33,7 @@ class Catalogue:
 
 		pour chaque catégorie à scrapper:
 
-			pour chaque page de produits à scrapper:
-
+			pour chaque page de produits à scrapper:  #Tant que le nombre de produits / catégories n'a pas été atteint ?
 				object_requests <- récupérer données ('url/catégorie/page.json?fields')
 
 				_processing_data(object_requests.json())
@@ -44,9 +45,9 @@ class Catalogue:
 		Args:
 
 			raw_catalogue (dict): raw json data, from the API
+			category (str): current category scrapped
 
 		"""
-
 
 		pour chaque produits dans raw_catalogue:
 
@@ -54,8 +55,5 @@ class Catalogue:
 
 				mettre en forme le produit
 
-				ajouter le produit à self._catalogue
-
-	def _modeling_data(self):
-		"""Storing data into models for insertion in DB
-		"""
+				ajouter le produit à self._catalogue #Tel quel, sous forme de dictionnaire
+				ajouter la liste des catégories de ce produit à self.categories_for_each_product

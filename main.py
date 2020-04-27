@@ -8,18 +8,66 @@ from manager import Manager
 
 def main():
 
+	objet_manager <- Manager()
 	objet_catalogue <- Catalogue()
 	objet_product <- Product()
 	objet_category <- Category()
 	objet_cat_and_prod <- CategoryAndProduct()
 	manager <- Manager()
 	objet_substitution <- Substitution()
-	objet_mysql <- mysql.connector().connect("informations utilisateur")
+	objet_inspection <- ModelInspection()
+	objet_mysql <- mysql.connector.connect("informations utilisateur")
 
 	connexion à la base de donnée
 	objet_curseur <- objet_mysql.curseur()
+	
+	ouvrir le fichier 'create_sql.db':
+		pour chaque ligne du fichier
+			objet_curseur <- executer la ligne
 
-	créer la base de donnée (fichier 'create_db.sql')
+	#Insertion des catégories
+
+	Pour chaque catégorie du catalogue:
+
+		modèle_catégorie <- catégorie
+		inspection du modèle_catégorie
+		liste_de_catégories_db <- insertion de la donnée
+
+	objet_manager <- insérer (objet_curseur, 
+							  table, 
+							  inspection du modèle_catégories(colonnes), 
+							  liste_de_catégories_db
+							 )
+
+	#Insertion des produits dans la table produit
+	#Et des données dans la table intermédiaire
+
+	Pour chaque produit du catalogue:
+
+		modèle_produit <- produit
+		inspection du modèle_produit
+		liste_de_produits_db <- insertion de la donnée
+
+	objet_manager <- insérer (objet_curseur,
+							  table,
+							  inspection du modèle produit(colonnes),
+							  liste_de_produits_db,
+							 )
+
+	#Insertion des données dans la table intermédiaire
+
+	Récupérer la liste des catégories avec leurs id:
+
+		liste_catégories_id <- object_manager <- selectionner (objet_curseur,
+															   table,
+															   inspection du modèle catégories(colonnes),
+															  )
+
+		# TODO TODO TODO TODO TODO 
+
+
+
+
 
 	menu_principal()
 
