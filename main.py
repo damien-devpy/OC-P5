@@ -1,13 +1,15 @@
 # coding: utf-8
 
 import mysql.connector
+
+from manager import Manager
+
 from catalogue import Catalogue
+
 from category import Category
 from product import Product
-from substitution import Substitution
 from categoryandproduct import CategoryAndProduct
-from modelinspection import ModelInspection
-from manager import Manager
+from substitution import Substitution
 
 
 def main():
@@ -21,47 +23,53 @@ def main():
 			curseur <- executer la ligne
 
 	obj_catalogue <- Catalogue()
-	obj_model_inspection <- ModelInspection()
 	manager <- Manager()
 
 	#Insertion des catégories
 
-	pour chaque catégorie dans obj_catalogue.categories_uniques:
+	categories = Category(manager_object=manager, cursor_object=curseur)
 
-		cat = Category(name=catégorie)
-		cat.save(manager, curseur)
+	pour chaque catégorie dans obj_catalogue.list_categories:
+		c = Category(name=categorie)
+		categories + c
 
 	fin pour
 
+	categories.save_all()
+
+	id_and_categories = categories.read()
+
 	#Insertion des produits
+
+	all_products = Product(manager_object=manager, cursor_object=curseur)
 
 	pour chaque produit dans obj_catalogue.catalogue:
 
 		p = Product(**produit)
-		p.save(manager, curseur)
+		all_products + p
 
 	fin pour
+
+	all_products.save_all()
 
 	#Alimentation de la table intermédiaire
 
-	Category().read(manager, curseur)
-
-	pour chaque élément dans le curseur:
-
-		dictionnaire{id_cat, catégorie} <- enregistrer les éléments
-
-	fin pour
+	all_cat_and_prod = CategoryAndProduct(manager_object=manager, cursor_object=curseur)
 
 	pour chaque produit dans obj_catalogue.catalogue:
 
-		pour chaque élément dans le dictionnaire(id_cat, catégorie):
+		pour chaque élément dans id_and_categories:
 
-			si le produit appartient à la catégorie
+			si le produit appartient à la catégorie:
 
-			c_a_p = CategoryAndProduct(category_id=id_cat, product_barre_code=produit['barre_code'])
-			c_a_p.save()
+				cap = CategoryAndProduct(category_id=élément[id],
+										 product_barre_code=produit['barre_code'],
+										)
+				all_cat_and_prod + cap
 
 	fin pour
+
+	all_cat_and_prod.save_all()
 
 	menu_principal()
 
@@ -92,14 +100,33 @@ def choisir_un_aliment:
 
 		récupérer les produits en base de la catégorie choisie
 
-			categorie_utilisateur = CategoryAndProduct(category_id=choix_utilisateur)
-			categorie_utilisateur.read(manager, curseur, columns='product_barre_code', )
+			categorie_utilisateur = CategoryAndProduct(manager_object=manager,
+													   cursor_object=curseur,
+													   category_id=choix_utilisateur,
+													  )
 
-		afficher "Liste des produits"
+			categorie_utilisateur.filter(f'category_id={choix_utilisateur}')
+			liste_cb = categorie_utilisateur.read(columns='product_barre_code')
+
+		liste_produits <- liste
+
+		pour chaque code_barre dans liste_cb:
+			p = Product(manager_object=manager,
+						cursor_object=curseur,
+					   )
+
+			p.filter(f'barre_code={code_barre}')
+			p.read()
+
+			liste_produits <- p
+
+		pour chaque produits dans liste_produits:
+
+			afficher le produit
 
 		choix_utilisateur <- entrée_utilisateur()
 
-		récupérer le détail du produit choisis
+		récupérer les informations dans liste_produits[produit_choisi]
 
 		afficher "Détail du produit"
 
@@ -111,11 +138,20 @@ def choisir_un_aliment:
 
 		si 1:
 
-			rechercher une substitution
+			product_substitute = liste_produits[produit_choisi]
+			product_substitute.get_substitute(choix_utilisateur_catégorie)
 
-			afficher "produit de substitution"
+			afficher "product_substitute"
 
 			afficher "Enregistrement ?"
+
+			record_substitution = Substitution(manager_object=manager,
+											   cursor_object=curseur,
+											   barre_code_to_substitute=barre_code_choix_utilisateur,
+											   barre_code_substitute=product_subsitute['barre_code'],
+											  )
+
+			afficher "Substitution enregistrée"
 
 			afficher "Retour au menu principal"
 
@@ -131,7 +167,9 @@ def choisir_un_aliment:
 
 def anciennes_substitutions():
 
-	rechercher toutes les substitutions
+	all_substititions = Substitution(manager_object=manager, cursor_object=curseur)
+
+	historique = all_substititions.read()
 
 	pagination
 
@@ -143,9 +181,16 @@ def anciennes_substitutions():
 
 	si 1:
 
-		récupérer les détail des produits
+		bc_to_substitute = Product(manager_object=manager, cursor_object=curseur)
+		bc_substitute = Product(manager_object=manager, cursor_object=curseur)
 
-		afficher "Produits"
+		bc_to_substitute.filter(f'barre_code={historique[0]}')
+		bc_to_substitute = bc_to_substitute.read()
+
+		bc_substitute.filter(f'barre_code={historique[1]}')
+		bc_substitute = bc_substitute.read()
+
+		afficher "bc_to_substitute/bc_substitute"
 
 		afficher "1. Retour aux substitutions"
 

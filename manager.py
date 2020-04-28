@@ -6,9 +6,6 @@ class Manager:
 	"""In chage of managing data base
 	"""
 
-	def __init__(self):
-		pass
-
 
 	def select(self, cursor_object, table, columns, where_clause=False):
 		"""In charge of R part of CRUD (read)
@@ -18,14 +15,20 @@ class Manager:
 			cursor_object (cursor object): needed for managing DB
 			table (str): ame of the table to read
 			columns (tuple): columns to read
+			where_clause (bool): Default to False. If not, contain a string looking
+				like 'column=value' for the keyword WHERE in a query
 
 		"""
-		si where_clause est vrai:
 
-			cursor_object <- executer la requête : "SELECT columns FROM table WHERE " + where_clause
+		Commencer une transaction:
 
-		else:
-			cursor_object <- executer la requête : "SELECT columns FROM table"
+			si where_clause est vrai:
+				cursor_object <- executer la requête : "SELECT columns FROM table WHERE " + where_clause
+
+			else:
+				cursor_object <- executer la requête : "SELECT columns FROM table"
+
+		Commit
 
 
 	def insert(self, cursor_object, table, columns, values):
@@ -40,9 +43,31 @@ class Manager:
 			
 		"""
 
+		Commencer une transaction:
+
+			si values est une liste:
+
+				cursor_object <- executer les requêtes : ("INSERT INTO table (columns) VALUES (élément)", values)
+
+			sinon:
+
 				cursor_object <- executer la requête : "INSERT INTO table (columns) VALUES (élément)"
 
-	def substitution(self):
+		Commit
+
+
+	def substitution(self, cursor_object, user_category, nutrition_grade_to_substitute):
 		"""Specifically in charge for looking a product substitution
 		"""
 
+		cursor_object <- executer la requête : ("""SELECT barre_code, MIN(nutrition_grade)
+												FROM (
+												SELECT product.barre_code, product.nutrition_grade FROM product
+												INNER JOIN category_and_products
+												ON product.barre_code = category_and_product.product_barre_code
+												INNER JOIN category_and_products as c_a_p
+												ON category_and_product.category_id = c_a_p.category_id
+												WHERE product.nutrition_grade < "nutrition_grade_to_substitute"
+													AND category_and_product.category_id = "user_category"
+												) as minimal_nutriscore;)"""
+												)

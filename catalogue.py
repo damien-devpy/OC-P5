@@ -6,8 +6,8 @@ from configuration import (CATEGORIES_TO_SCRAPE,
 						   FIELDS
 						  )
 
-class Catalogue:
 
+class Catalogue:
 	"""In charge of calling the API, getting back data
 
 	and making them useable
@@ -17,14 +17,13 @@ class Catalogue:
 	def __init__(self):
 		"""Creating catalogue of products
 
-		self._catalogue (...): Private attribute, containing all
-		products and categories, cleaned, ready for registering in DB
+		self._catalogue (dict): containing all products and categories, 
+			cleaned, ready for registering in DB
 
 		"""
 
 		self._catalogue = _get_data()
-		self._categories_for_each_product = []
-		self.categories_uniques = set()
+		self._categories_for_each_product = list()
 
 
 	def _get_data(self):
@@ -33,10 +32,12 @@ class Catalogue:
 
 		pour chaque catégorie à scrapper:
 
-			pour chaque page de produits à scrapper:  #Tant que le nombre de produits / catégories n'a pas été atteint ?
+			Tant que le nombre de produits par catégories n''a pas été atteint:
 				object_requests <- récupérer données ('url/catégorie/page.json?fields')
 
 				_processing_data(object_requests.json())
+
+		self._list_categories = {chaque catégorie dans liste de catégories dans self._categories_for_each_product}
 
 
 	def _processing_data(self, raw_catalogue):
