@@ -6,46 +6,78 @@ class CategoryAndProduct:
 
     TABLE_NAME = "category_and_product"
 
-    def __init__(self, category_id, product_barre_code):
-        """init method
-
-        Attributes:
-
-            category_id (int): category_id column in category_and_product table
-            product_barre_code (int): product_barre_code column in category_and_product table
-
-        """
-
-        self._category_id = category_id
-        self._product_barre_code = product_barre_code
-
-	def save(self, manager_object, cursor_object):
-		"""Saving data in DB, through a manager
+    def __init__(self, manager_object, cursor_object, **kwargs):
+		"""init method
 
 		Args:
 
-			manager_object (object manager): Gave access to insert method manager
-			cursor_object (object cursor): Needed for managing DB
+			manager_object (manager object): Gave access to the manager
+			cursor_object (cursor object): Needed for managing DB
+			kwargs (dict): Variable number of keywords arguments and  type (id (int), name (str), barre_code (int), ...)
+
+		Attributes:
+			
+			self._manager (manager object): attribute from the argument
+			self._object (cursor object): attribute from the argument
+			self._category_id (int): attribute that represent category_id column in DB
+			self._product_barre_code (int): attribute that represent product_barre_code column in DB
+			self._filter (bool): Default to False. Else, contain string like 'column=value' if the user want to add 
+				a where clause to a query
+
+        """
+
+        self._manager = manager_object
+        self._cursor = cursor_object
+        self._category_id = kwargs.get('category_id')
+        self._product_barre_code = kwargs.get('product_barre_code')
+        self._filter = False
+
+
+	def save(self):
+		"""Insert data in DB, through a manager
 
 		"""
 
-		manager_object.insert(cursor_object, CategoryAndProduct.TABLE_NAME, columns_name, (self._category_id,
-																						   self._product_barre_code,
-																						   )
-							 )
+		columns = tuple de(élément[0] de élément dans self.__dict__)
+		values = tuple de(élément[1] de élément dans self.__dict__)
 
-	def read(self, manager_object, cursor_object, columns='*'):
+		self._manager.insert(self._cursor, CategoryAndProduct.TABLE_NAME, columns, values)
+
+
+	def filter(self, where_clause):
+		"""Allow to a add a where_clause
+
+		Args:
+
+			where_clause (str): String looking like 'column=value' for adding a where clause
+
+		"""
+
+		self._filter = where_clause
+
+
+	def read(self, columns='*'):
 		"""Reading data from DB, through a manager
 
 		Args:
 
-			manager_object (object manager): Gave access to select method manager
-			cursor_object (object cursor): Needed for managing DB
+			columns (tuple): Tuple of string on which columns we want to read data.
+				Default to *, meaning all of them.
+
+		Returns:
+
+			result (list): List of category_object 
 
 		"""
 
 		si columns == '*':
-			colums <- toutes les colonnes
+			colums = tuple de(élément[0] de élément dans self.__dict__)
 
-		manager_object.select(cursor_object, Product.TABLE_NAME, columns)
+		si self._filter est vrai:
+
+			self._manager.select(self._cursor, Product.TABLE_NAME, columns, where=self._filter)
+
+		sinon:
+
+			self._manager.select(self._cursor, Product.TABLE_NAME, columns)
 

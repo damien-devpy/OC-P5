@@ -10,7 +10,7 @@ class Manager:
 		pass
 
 
-	def select(self, cursor_object, table, columns):
+	def select(self, cursor_object, table, columns, where_clause=False):
 		"""In charge of R part of CRUD (read)
 
 		Args:
@@ -20,8 +20,12 @@ class Manager:
 			columns (tuple): columns to read
 
 		"""
+		si where_clause est vrai:
 
-		cursor_object <- executer la requête : "SELECT columns FROM table"
+			cursor_object <- executer la requête : "SELECT columns FROM table WHERE " + where_clause
+
+		else:
+			cursor_object <- executer la requête : "SELECT columns FROM table"
 
 
 	def insert(self, cursor_object, table, columns, values):

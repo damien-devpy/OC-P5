@@ -4,29 +4,36 @@ class Substitution:
 	"""Model class of substitution table in database
 	"""
 
-	def __init__(self):
+	TABLE_NAME = "substitution"
+
+	def __init__(self, manager_object, cursor_object, **kwargs):
 		"""init method
-
-		Attributes:
-
-			barre_code_to_substitute (int): column in substitution table
-			barre_code_substitute (int): column in substition table
-
-		"""
-
-		pass
-
-	def unpacking_values(self, data):
-		"""Public method in charge of unpacking values, ffrom catalogue to model, or from DB to model
 
 		Args:
 
-		data (tuple): Contain data to unpack into attributes
+			manager_object (manager object): Gave access to the manager
+			cursor_object (cursor object): Needed for managing DB
+			kwargs (dict): Variable number of keywords arguments and  type (id (int), name (str), barre_code (int), ...)
+
+		Attributes:
+
+			self._manager (manager object): attribute from the argument
+			self._object (cursor object): attribute from the argument
+			self._barre_code_to_substitute (int): attribute that represent barre_code_to_substitute column in DB
+ 			self._barre_code_substitute (int): attribute that represent barre_code_substitute column in DB
 
 		"""
 
-		pour chaque élément dans cursor_object:
-			mettre ces attributs dans l''état(self, attr, value)
+		self._manager = manager_object
+        self._cursor = cursor_object
+        self._barre_code_to_substitute = kwargs.get('barre_code_to_substitute')
+        self._barre_code_substitute = kwargs.get('barre_code_substitute')
 
 
-		pass
+    def save(self):
+		"""Insert data in DB, through a manager
+
+		"""
+
+		self._manager.insert()
+
