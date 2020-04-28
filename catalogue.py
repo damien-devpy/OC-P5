@@ -1,9 +1,11 @@
 # coding: utf-8
 
 import requests
-from configuration import (CATEGORIES_TO_SCRAPE,
-						   PAGE,
-						   FIELDS
+from configuration import (URL,
+						   HEADER,
+						   CATEGORIES_TO_SCRAPE,
+						   PRODUCTS_PER_CATEGORIES,
+						   FIELDS,
 						  )
 
 
@@ -22,7 +24,7 @@ class Catalogue:
 
 		"""
 
-		self._catalogue = _get_data()
+		self._catalogue = _get_data() # Creating catalogue of products
 		self._categories_for_each_product = list()
 
 
@@ -30,14 +32,27 @@ class Catalogue:
 		"""In charge of calling the API and receiving raw data
 		"""
 
-		pour chaque catégorie à scrapper:
+		i = 0
+		k = 1 #Number of the current page scrapped
 
-			Tant que le nombre de produits par catégories n''a pas été atteint:
-				object_requests <- récupérer données ('url/catégorie/page.json?fields')
+		for category in CATEGORIES_TO_SCRAPE:
 
-				_processing_data(object_requests.json())
+			# While we haven't enough products for this category
+			while i < PRODUCTS_PER_CATEGORIES:
 
-		self._list_categories = {chaque catégorie dans liste de catégories dans self._categories_for_each_product}
+
+				response = requests.get(URL+category+f'/{k}.json?'+FIELDS)
+
+				_processing_data(response.json())
+
+				i = len(self._catalogue) # Setting i to the number of products scrapped
+				k += 1 # Turning page
+
+		# Building a set of each, unique, category
+		self._set_of_categories = {category 
+								   for categories_of_each_product in self._categories_for_each_product
+								   for category in categories_of_each_product
+								  }
 
 
 	def _processing_data(self, raw_catalogue):
@@ -50,7 +65,7 @@ class Catalogue:
 
 		"""
 
-		pour chaque produits dans raw_catalogue:
+		for product in raw_catalogue:
 
 			si le produit est complet:
 

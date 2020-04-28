@@ -29,7 +29,7 @@ def main():
 
 	categories = Category(manager_object=manager, cursor_object=curseur)
 
-	pour chaque catégorie dans obj_catalogue.list_categories:
+	pour chaque catégorie dans obj_catalogue.set_of_categories:
 		c = Category(name=categorie)
 		categories + c
 
