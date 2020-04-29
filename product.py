@@ -1,5 +1,8 @@
 # coding: utf-8
 
+from re import sub
+from re import compile as re_compile
+
 class Product:
 	"""Model class of the product table in database
 	"""
@@ -9,7 +12,7 @@ class Product:
 	def __init__(self,
 				 manager_object=None,
 				 cursor_object=None,
-				 **kwargs
+				 current_product=None
 				):
 
 		"""init method
@@ -17,8 +20,11 @@ class Product:
 		Args:
 
 			manager_object (manager object): Gave access to the manager
+				Default to None.
 			cursor_object (cursor object): Needed for managing DB
-			kwargs (dict): Variable number of keywords arguments and  type (id (int), name (str), barre_code (int), ...)
+				Default to None.
+			current_product (tuple): Contain all informations about the current product
+				Default to None.
 
 		Attributes:
 
@@ -36,65 +42,79 @@ class Product:
 				a where clause to a query
 			self._buffer (list): Container for category_objects for a massive insert
 
+			self._pattern (regular expression) : Contain a compiled regular expression
+
 		"""
 
 		self._manager = manager_object
 		self._cursor = cursor_object
 
-		self._barre_code = kwargs.get('barre_code')
-		self._name = kwargs.get('name')
-		self._nutrition_grade = kwargs.get('_nutrition_grade')
-		self._brand = kwargs.get('brand')
-		self._ingredients = kwargs.get('ingredients')
-		self._quantity = kwargs.get('quantity')
+		(self._barre_code,
+		 self._name,
+		 self._nutrition_grade,
+		 self._brand,
+		 self._ingredients,
+		 self._quantity,
+
+		) = current_product # Unpacking the arg current_product in each attribute
+		
 
 		self._filter = False
 		self._buffer = list()
 
+		self._pattern = re_compile(r'[_]')
+
+		columns = (self.__dict__[2][0],
+				   self.__dict[3][0],
+				   self.__dict[4][0],
+				   self.__dict[5][0],
+				   self.__dict[6][0],
+				   self.__dict[7][0],
+				  )
+
+	    # Getting rid of the underscore sign of the attribute
+		# gives columns in DB
+		self._columns = tuple(sub(self._pattern,
+							      '',
+							      attr,
+						         )
+							  for attr in columns
+						     )
 
 	def save(self):
 		"""Insert data in DB, through a manager
 
 		"""
 
-		columns = tuple de(self.__dict__[2][0],
-						   self.__dict[3][0],
-						   self.__dict[4][0],
-						   self.__dict[5][0],
-						   self.__dict[6][0],
-						   self.__dict[7][0],)
+		values = (self._barre_code,
+				  self._name,
+				  self._nutrition_grade,
+				  self._brand,
+				  self._ingredients,
+				  self._quantity,
+				 )
 
-		values = tuple de(self.__dict__[2][1],
-						   self.__dict[3][1],
-						   self.__dict[4][1],
-						   self.__dict[5][1],
-						   self.__dict[6][1],
-						   self.__dict[7][1],)
-
-		self._manager.insert(self._cursor, Product.TABLE_NAME, columns_, values)
+		self._manager.insert(self._cursor, Product.TABLE_NAME, self._columns, values)
 
 
 	def save_all(self):
 		"""Insert all data in buffer, in DB, trough the manager
 		"""
 
-		colums = tuple de(self.__dict__[2][0],
-						   self.__dict[3][0],
-						   self.__dict[4][0],
-						   self.__dict[5][0],
-						   self.__dict[6][0],
-						   self.__dict[7][0],)
+		self._buffer = [(product.barre_code,
+		 				 product.name,
+		 				 product.nutrition_grade,
+		 				 product.brand,
+		 				 product.ingredients,
+		 				 product.quantity,
+		 				) 
+						for product in self._buffer
+					   ]
 
-		self._buffer = liste de[tuple de(product_object.barre_code,
-										 product_object.name,
-										 product_object.nutrition_grade,
-										 product_object.brand,
-										 product_object.ingredients,
-										 product_object.quantity,) pour chaque product_object dans self._buffer]
+		self._manager.insert(self._cursor, Product.TABLE_NAME, self._columns, self._buffer)
 
-		self._manager(self._cursor, Product.TABLE_NAME, columns, self._buffer)
 
-	def filter(self, where_clause):
+	def filter_by(self, where_clause):
 		"""Allow to a add a where_clause
 
 		Args:
@@ -119,37 +139,31 @@ class Product:
 
 		"""
 
-		si columns == '*':
-			columns = tuple de(self.__dict__[2][0],
-							   self.__dict[3][0],
-							   self.__dict[4][0],
-							   self.__dict[5][0],
-							   self.__dict[6][0],
-							   self.__dict[7][0],)
+		if columns == '*':
+			columns = self._columns
 
-		si self._filter est vrai:
+		# If a where clause exist
+		if self._filter:
 
 			self._manager.select(self._cursor, Product.TABLE_NAME, columns, where=self._filter)
 			self._filter = False
 
-		sinon:
+		else:
 
-			self._manager.select(self._cursor, Product.TABLE_NAME, colums)
+			self._manager.select(self._cursor, Product.TABLE_NAME, columns)
 
+		# Storing result of the query in a list
+		result = list()
 
-		resultat <- liste
+		# For each row
+		for element in self._cursor:
 
-		pour chaque élément dans self._cursor:
+			# Turning it in a product object 
+			# and adding it to the list
+			result.append(element)
 
-			tmp_kwargs = {columns[i]:élément[i] pour chaque i pour élément}
+		return result
 
-			r = Product(**tmp_kwargs)
-
-			ajouter r à résultat
-
-		fin pour
-
-		retourner résultat
 
 	def get_substitute(self, user_category):
 		"""Looking for a product substitute, through the manager
@@ -166,11 +180,21 @@ class Product:
 
 		self._manager.subsitution(self._cursor, user_category, self._nutrition_grade)
 
-		cb_substitute <- self._cursor[0]
+		cb_substitute  = self._cursor[0]
 
-		self._filter <- f'barre_code={cb_substitute}'
+		self.filter_by(f'barre_code={cb_substitute}')
 
-		self.read()
+		substitute = self.read()
+
+		(self._barre_code,
+		 self._name,
+		 self._nutrition_grade,
+		 self._brand,
+		 self._ingredients,
+		 self._quantity,
+
+		) = substitute
+
 
 	def __add__(self, product_object):
 		"""Allow to use the add operator between product_objects

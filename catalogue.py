@@ -24,11 +24,12 @@ class Catalogue:
 
 		"""
 
-		self._catalogue = _get_data() # Creating catalogue of products
-		self._categories_for_each_product = list()
+		self._catalogue = set() # Empty catalogue of products
+		
+		#self._categories_for_each_product = list()
+		self._set_of_categories = set()
 
-
-	def _get_data(self):
+	def get_data(self):
 		"""In charge of calling the API and receiving raw data
 		"""
 
@@ -41,18 +42,14 @@ class Catalogue:
 			while i < PRODUCTS_PER_CATEGORIES:
 
 
-				response = requests.get(URL+category+f'/{k}.json?'+FIELDS)
+				response = requests.get(URL+category+f'/{k}.json?fields='+FIELDS,
+										headers=HEADER
+									   )
 
-				_processing_data(response.json())
+				_processing_data(response.json()['products'])
 
 				i = len(self._catalogue) # Setting i to the number of products scrapped
 				k += 1 # Turning page
-
-		# Building a set of each, unique, category
-		self._set_of_categories = {category 
-								   for categories_of_each_product in self._categories_for_each_product
-								   for category in categories_of_each_product
-								  }
 
 
 	def _processing_data(self, raw_catalogue):
@@ -67,9 +64,26 @@ class Catalogue:
 
 		for product in raw_catalogue:
 
-			si le produit est complet:
+			# We don't wan't empty fields in our catalogue
+			if_all_fields_are_complete = all(True if product[j] != '' else False 
+											 for j in product
+											)
 
-				mettre en forme le produit
+			# If the product is complete, all fields wanted and filled
+			if len(product) == 7 and if_all_fields_are_complete:
 
-				ajouter le produit à self._catalogue #Tel quel, sous forme de dictionnaire
-				ajouter la liste des catégories de ce produit à self.categories_for_each_product
+				# Add a tuple containing product informations to the catalogue
+				self._catalogue.add((product['code'],
+									 product['product_name_fr'],
+									 product['nutriscore_grade'],
+									 product['brands'],
+									 product['ingredients_text_debug'],
+									 product['quantity'],
+									 product['categories'],
+									)
+								   )
+
+				for c in product['categories'].split(', '):
+
+					# Building a set of categories to which product belong
+					self._set_of_categories.add(c)

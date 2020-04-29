@@ -1,5 +1,8 @@
 # coding: utf-8
 
+from re import sub
+from re import compile as re_compile
+
 class CategoryAndProduct:
     """Model class of the category_and_product table in database
     """
@@ -7,20 +10,18 @@ class CategoryAndProduct:
     TABLE_NAME = "category_and_product"
 
     def __init__(self,
-    			 category_id=None,
-    			 product_barre_code=None,
     			 manager_object=None,
     			 cursor_object=None,
+    			 **kwargs
     			):
+
 		"""init method
 
 		Args:
 
-			category_id (int): id of category in table category
-			product_barre_code (int): barre_code of a product in product table
-
 			manager_object (manager object): Gave access to the manager
 			cursor_object (cursor object): Needed for managing DB
+			**kwargs (dict): Variable number of arguments
 
 		Attributes:
 			
@@ -36,14 +37,26 @@ class CategoryAndProduct:
 
         """
 
-        self._category_id = category_id
-        self._product_barre_code = product_barre_code
-
         self._manager = manager_object
         self._cursor = cursor_object
 
+        self._category_id = kwargs.get['category_id']
+        self._product_barre_code = kwargs.get['product_barre_code']
+
         self._filter = False
         self._buffer = list()
+
+		self._pattern = re_compile(r'[_]')
+
+        columns = (self.__dict__[2][0], 
+        		   self.__dict__[3][0],
+        		  )
+
+        self._columns = tuple(sub(self._pattern,
+        						  '',
+        						  columns,
+        						 )
+       						 )
 
 
 	def save(self):
@@ -51,20 +64,24 @@ class CategoryAndProduct:
 
 		"""
 
-		columns = tuple de(self.__dict__[0][0], self.__dict[1][0])
-		values = tuple de(self._category_id, self._product_barre_code)
+		values = (self._category_id,
+				  self._product_barre_code,
+				 )
 
-		self._manager.insert(self._cursor, CategoryAndProduct.TABLE_NAME, columns, values)
+		self._manager.insert(self._cursor, CategoryAndProduct.TABLE_NAME, self._columns, values)
+
 
 	def save_all(self):
 		"""Insert all data in buffer, in DB, trough the manager
 		"""
 
-		columns = tuple de(self.__dict__[0][0], self.__dict[1][0])
+		self._buffer = [(cap.category_id,
+						 cap.product_barre_code,
+						) 
+						for cap in self._buffer
+					   ]
 
-		self._buffer = liste de [tuple de(cap_object.category_id, cap_object.product_barre_code) pour chaque cap_object dans self._buffer]
-
-		self._manager.insert(self._cursor, CategoryAndProduct.TABLE_NAME, columns, self._buffer)
+		self._manager.insert(self._cursor, CategoryAndProduct.TABLE_NAME, self._columns, self._buffer)
 
 
 	def filter(self, where_clause):
@@ -93,35 +110,29 @@ class CategoryAndProduct:
 
 		"""
 
-		si columns == '*':
-			columns = tuple de(self.__dict__[0][0], self.__dict[1][0])
+		if columns == '*':
+			columns = self._columns
 
-		si self._filter est vrai:
+
+		if self._filter:
 
 			self._manager.select(self._cursor, Product.TABLE_NAME, columns, where=self._filter)
 			self._filter = False
 
-		sinon:
+		else:
 
 			self._manager.select(self._cursor, Product.TABLE_NAME, columns)
 
-		résultat <- liste
+		result = list()
 
-		pour chaque élément dans self._cursor:
 
-			si la longueur de columns == longueur de self.__dict__:
+		for element in self._cursor:
 
-				r = CategoryAndProduct(*élément)
+			tmp_kwargs = {columns[i]:element[i] for i in element}
+			r = CategoryAndProduct(**tmp_kwargs)
 
-			sinon:
+			result.append(r)
 
-				tmp_kwargs = {columns[i]:élément[i] pour i dans élément}
-				r = CategoryAndProduct(**tmp_kwargs)
-
-			résultat <- r
-
-		fin pour
-
-		retourner résultat
+		return result
 
 
