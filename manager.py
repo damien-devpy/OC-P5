@@ -21,10 +21,12 @@ class Manager:
 		"""
 
 		if where_clause:
-			cursor_object.execute("SELECT columns FROM table WHERE " + where_clause)
+
+			cursor_object.execute(f'SELECT {columns} FROM table WHERE {where_clause}')
 
 		else:
-			cursor_object.execute("SELECT columns FROM table")
+
+			cursor_object.execute(f'SELECT {columns} FROM table')
 
 		
 
@@ -41,31 +43,30 @@ class Manager:
 			
 		"""
 
-		replacement_character = len(columns) * ['%s']
-		str_replacement = f'({", ".join(replacement_character)})'
+		replacement = f'({", ".join('%s' for i in columns)})'
 
 		# If values is a list of values
 		if isinstance(values, list):
 
-			cursor_object.executemany("INSERT INTO table" + str_replacement + "VALUES" + str_replacement, columns, values)
+			cursor_object.executemany(f'INSERT INTO table {columns} VALUES {replacement}', values)
 
 		else:
 
-			cursor_object.execute("INSERT INTO table (columns) VALUES (élément)")
+			cursor_object.execute(f'INSERT INTO table {columns} VALUES {replacement}', values)
 
 
 	def substitution(self, cursor_object, user_category, nutrition_grade_to_substitute):
 		"""Specifically in charge for looking a product substitution
 		"""
 
-		cursor_object.execute("""SELECT barre_code, MIN(nutrition_grade)
+		cursor_object.execute(f"""SELECT barre_code, MIN(nutrition_grade)
 												FROM (
 												SELECT product.barre_code, product.nutrition_grade FROM product
 												INNER JOIN category_and_products
 												ON product.barre_code = category_and_product.product_barre_code
 												INNER JOIN category_and_products as c_a_p
 												ON category_and_product.category_id = c_a_p.category_id
-												WHERE product.nutrition_grade < "nutrition_grade_to_substitute"
-													AND category_and_product.category_id = "user_category"
+												WHERE product.nutrition_grade < {nutrition_grade_to_substitute}
+													AND category_and_product.category_id = {user_category}
 												) as minimal_nutriscore;)"""
 												)
