@@ -14,7 +14,6 @@ class Category:
 				 cursor_object=None,
 				 **kwargs
 			    ):
-
 		"""init method
 
 		Args:
@@ -72,9 +71,9 @@ class Category:
 		"""Insert all data in buffer, in DB, trough the manager
 		"""
 
+		# id category is an auto_increment column in DB, so we don't need to manage it
+		# Forward only attribute name
 		columns = tuple(self._columns[1])
-
-		self._buffer = [(category.name,) for category in self._buffer]
 
 		self._manager.insert(self._cursor, Category.TABLE_NAME, self._colums, self._buffer)
 
@@ -99,15 +98,18 @@ class Category:
 
 		self._manager.select(self._cursor, Category.TABLE_NAME, columns)
 
+		# Storing result of the query in a list
 		result = list()
 
+		# For each row
 		for element in self._cursor:
 
+			# Temporary kwargs containing columns and data related read from
+			# the DB.
 			tmp_kwargs = {columns[i]:element[i] for i in element}
 			r = Category(**tmp_kwargs)
 
 			result.append(r)
-
 
 		return result
 
@@ -122,4 +124,5 @@ class Category:
 
 		"""
 
-		self._buffer.append(category_object)
+		# Adding to the buffer a tuple containing object attributes
+		self._buffer.append((category_object.name,))

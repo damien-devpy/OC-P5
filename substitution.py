@@ -1,5 +1,8 @@
 # coding: utf-8
 
+from re import sub
+from re import compile as re_compile
+
 class Substitution:
 	"""Model class of substitution table in database
 	"""
@@ -7,20 +10,17 @@ class Substitution:
 	TABLE_NAME = "substitution"
 
 	def __init__(self, 
-				 barre_code_to_substitute=None,
-				 barre_code_substitute=None,
 				 manager_object=None,
 				 cursor_object=None,
+				 **kwargs,
 				):
 		"""init method
 
 		Args:
 
-			self._barre_code_to_substitute (int): barre code of the product we want to find a substitute
-			self._barre_code_substitute (int): barre code of the product that suit for substitution
-
 			manager_object (manager object): Gave access to the manager
 			cursor_object (cursor object): Needed for managing DB
+			**kwargs (dict): Variable number of arguments
 
 		Attributes:
 
@@ -31,11 +31,23 @@ class Substitution:
 
 		"""
 
-        self._barre_code_to_substitute = barre_code_to_substitute
-        self._barre_code_substitute = barre_code_substitute
-
 		self._manager = manager_object
         self._cursor = cursor_object
+
+        self._barre_code_to_substitute = kwargs.get['barre_code_to_substitute']
+        self._barre_code_substitute = kwargs.get['barre_code_substitute']
+
+        self._pattern = re_compile(r'[_]')
+
+        columns = (self.__dict__[2][0],
+        		   self.__dict__[3][0],
+        		  )
+
+        self._columns = tuple(sub(self._pattern,
+        						  '',
+        						  columns,
+        						 )
+       						 )
 
 
     def save(self):
@@ -43,10 +55,11 @@ class Substitution:
 
 		"""
 
-		columns <- tuple de(élément[0] de élément dans self.__dict__)
-		values <- tuple de(élément[1] de élément dans self.__dict__)
+		values = (self._barre_code_to_substitute,
+				  self._barre_code_substitute,
+				 )
 
-		self._manager.insert(self._cursor, Substitution.TABLE_NAME, colums, values)
+		self._manager.insert(self._cursor, Substitution.TABLE_NAME, self._columns, values)
 
 	def read(self, columns='*'):
 		"""Reading data from DB, through a manager
@@ -58,31 +71,27 @@ class Substitution:
 
 		Returns:
 
-			result (list): List of category_object 
+			result (list): List of substitution_object
 
 		"""
 
-		si columns == '*':
-			columns <- tuple de(élément[0] de élément dans self.__dict__)
+		if columns == '*':
+			columns = self._columns
 
 		self._manager.insert(self._cursor, Substitution.TABLE_NAME, columns)
+		
+		# Storing result of the query in a list
+		result = list()
 
-		résultat <- liste
+		# For each row
+		for element in self._cursor:*
 
-		pour chaque élément dans self._cursor:
+			# Temporary kwargs containing columns and data related read from
+			# the DB. 
+			tmp_kwargs = {columns[i]:élément[i] for i in element}
+			r = Substitution(**tmp_kwargs)
 
-			si la longueur de columns == longueur de élément:
+			result.append(r)
 
-				r = Substitution(*élément)
-
-			sinon:
-
-				tmp_kwargs = {columns[i]:élément[i] de i dans élément}
-				r = Substitution(**tmp_kwargs)
-
-			résultat <- r
-
-		fin pour
-
-		retourner résultat
+		return result
 

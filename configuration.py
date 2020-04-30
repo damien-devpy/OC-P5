@@ -9,7 +9,7 @@ CREDENTIALS = 'user=***, password=***, host=localhost'
 HEADER = {'User-Agent': 'OFF App in progress - v0.1'}
 
 #url of the API
-URL = ' https://fr.openfoodfacts.org/categorie/'
+URL = 'https://fr.openfoodfacts.org/categorie/'
 
 #Fields to get
 FIELDS = 'code,product_name_fr,nutriscore_grade,brands,ingredients_text_debug,quantity,categories'
@@ -26,6 +26,16 @@ CATEGORIES_TO_SCRAPE = {'chips-a-l-ancienne', # old-fashioned-crisps
 			  'sauces-pesto', # pestos
 			  'rillettes',
 }
+
+# Switching keywords of the API for the app's own kw
+KEYWORDS_API_APP = {'code': 'barre_code',
+					'product_name_fr': 'name',
+					'nutriscore_grade': 'nutrition_grade',
+					'brands': 'brand',
+					'ingredients_text_debug': 'ingredients',
+					'quantity': 'quantity',
+					'categories': 'categories',
+					}
 
 
 # Number of products per categories to scrap

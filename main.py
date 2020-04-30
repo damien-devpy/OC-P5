@@ -11,7 +11,9 @@ from product import Product
 from categoryandproduct import CategoryAndProduct
 from substitution import Substitution
 
-from configuration import CREDENTIALS,
+from configuration import (CREDENTIALS,
+						   KEYWORDS_API_APP,
+						  )
 
 
 def main():

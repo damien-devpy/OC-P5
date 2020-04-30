@@ -24,9 +24,7 @@ class Catalogue:
 
 		"""
 
-		self._catalogue = set() # Empty catalogue of products
-		
-		#self._categories_for_each_product = list()
+		self._catalogue = list() # Empty catalogue of products
 		self._set_of_categories = set()
 
 	def get_data(self):
@@ -73,15 +71,7 @@ class Catalogue:
 			if len(product) == 7 and if_all_fields_are_complete:
 
 				# Add a tuple containing product informations to the catalogue
-				self._catalogue.add((product['code'],
-									 product['product_name_fr'],
-									 product['nutriscore_grade'],
-									 product['brands'],
-									 product['ingredients_text_debug'],
-									 product['quantity'],
-									 product['categories'],
-									)
-								   )
+				self._catalogue.append(product)
 
 				for c in product['categories'].split(', '):
 

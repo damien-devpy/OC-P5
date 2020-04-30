@@ -13,22 +13,20 @@ class Manager:
 		Args:
 
 			cursor_object (cursor object): needed for managing DB
-			table (str): ame of the table to read
+			table (str): name of the table to read
 			columns (tuple): columns to read
 			where_clause (bool): Default to False. If not, contain a string looking
 				like 'column=value' for the keyword WHERE in a query
 
 		"""
 
-		Commencer une transaction:
+		if where_clause:
+			cursor_object.execute("SELECT columns FROM table WHERE " + where_clause)
 
-			si where_clause est vrai:
-				cursor_object <- executer la requête : "SELECT columns FROM table WHERE " + where_clause
+		else:
+			cursor_object.execute("SELECT columns FROM table")
 
-			else:
-				cursor_object <- executer la requête : "SELECT columns FROM table"
-
-		Commit
+		
 
 
 	def insert(self, cursor_object, table, columns, values):
@@ -43,24 +41,24 @@ class Manager:
 			
 		"""
 
-		Commencer une transaction:
+		replacement_character = len(columns) * ['%s']
+		str_replacement = f'({", ".join(replacement_character)})'
 
-			si values est une liste:
+		# If values is a list of values
+		if isinstance(values, list):
 
-				cursor_object <- executer les requêtes : ("INSERT INTO table (columns) VALUES (élément)", values)
+			cursor_object.executemany("INSERT INTO table" + str_replacement + "VALUES" + str_replacement, columns, values)
 
-			sinon:
+		else:
 
-				cursor_object <- executer la requête : "INSERT INTO table (columns) VALUES (élément)"
-
-		Commit
+			cursor_object.execute("INSERT INTO table (columns) VALUES (élément)")
 
 
 	def substitution(self, cursor_object, user_category, nutrition_grade_to_substitute):
 		"""Specifically in charge for looking a product substitution
 		"""
 
-		cursor_object <- executer la requête : ("""SELECT barre_code, MIN(nutrition_grade)
+		cursor_object.execute("""SELECT barre_code, MIN(nutrition_grade)
 												FROM (
 												SELECT product.barre_code, product.nutrition_grade FROM product
 												INNER JOIN category_and_products

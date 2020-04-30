@@ -12,9 +12,8 @@ class Product:
 	def __init__(self,
 				 manager_object=None,
 				 cursor_object=None,
-				 current_product=None
+				 **kwargs
 				):
-
 		"""init method
 
 		Args:
@@ -23,8 +22,7 @@ class Product:
 				Default to None.
 			cursor_object (cursor object): Needed for managing DB
 				Default to None.
-			current_product (tuple): Contain all informations about the current product
-				Default to None.
+			**kwargs (dict): Variable number of arguments
 
 		Attributes:
 
@@ -49,16 +47,13 @@ class Product:
 		self._manager = manager_object
 		self._cursor = cursor_object
 
-		(self._barre_code,
-		 self._name,
-		 self._nutrition_grade,
-		 self._brand,
-		 self._ingredients,
-		 self._quantity,
-
-		) = current_product # Unpacking the arg current_product in each attribute
+		self._barre_code = kwargs.get['barre_code']
+		self._name = kwargs.get['name']
+		self._nutrition_grade = kwargs.get['nutrition_grade']
+		self._brand = kwargs.get['brand']
+		self._ingredients = kwargs.get['ingredients']
+		self._quantity = kwargs.get['quantity']
 		
-
 		self._filter = False
 		self._buffer = list()
 
@@ -73,13 +68,8 @@ class Product:
 				  )
 
 	    # Getting rid of the underscore sign of the attribute
-		# gives columns in DB
-		self._columns = tuple(sub(self._pattern,
-							      '',
-							      attr,
-						         )
-							  for attr in columns
-						     )
+		# gives columns names in DB
+		self._columns = tuple(sub(self._pattern, '', attr) for attr in columns)
 
 	def save(self):
 		"""Insert data in DB, through a manager
@@ -100,16 +90,6 @@ class Product:
 	def save_all(self):
 		"""Insert all data in buffer, in DB, trough the manager
 		"""
-
-		self._buffer = [(product.barre_code,
-		 				 product.name,
-		 				 product.nutrition_grade,
-		 				 product.brand,
-		 				 product.ingredients,
-		 				 product.quantity,
-		 				) 
-						for product in self._buffer
-					   ]
 
 		self._manager.insert(self._cursor, Product.TABLE_NAME, self._columns, self._buffer)
 
@@ -135,7 +115,7 @@ class Product:
 
 		Returns:
 
-			result (list): List of category_object 
+			result (list): List of product_object 
 
 		"""
 
@@ -158,9 +138,12 @@ class Product:
 		# For each row
 		for element in self._cursor:
 
-			# Turning it in a product object 
-			# and adding it to the list
-			result.append(element)
+			# Temporary kwargs containing columns and data related read from
+			# the DB. 
+			tmp_kwargs = {columns[i]:element[i] for i in element}
+			r = Product(**tmp_kwargs)
+
+			result.append(r)
 
 		return result
 
@@ -178,22 +161,26 @@ class Product:
 
 		"""
 
+		# Searching the DB for a product substitute from the user choice
 		self._manager.subsitution(self._cursor, user_category, self._nutrition_grade)
 
+		# Getting the barre_code of the product sustitute
 		cb_substitute  = self._cursor[0]
 
+		# Adding a where clause for reading DB where the row equal the barre_code
+		# of the product substitute
 		self.filter_by(f'barre_code={cb_substitute}')
 
-		substitute = self.read()
+		# Getting all informations of this product
+		substitute = self.read()[0]
 
-		(self._barre_code,
-		 self._name,
-		 self._nutrition_grade,
-		 self._brand,
-		 self._ingredients,
-		 self._quantity,
-
-		) = substitute
+		# Making self the product of substitution
+		self._barre_code = substitute.get['barre_code']
+		self._name = substitute.get['name']
+		self._nutrition_grade = substitute.get['nutrition_grade']
+		self._brand = substitute.get['brand']
+		self._ingredients = substitute.get['ingredients']
+		self._quantity substitute.get['quantity']
 
 
 	def __add__(self, product_object):
@@ -202,10 +189,19 @@ class Product:
 
 		Args:
 
-			product_object (product object): Model representing product table in DB
+			product_object (product object): product to add to the buffer
 			
 		"""
 
-		self._buffer.append(product_object)
+		# Adding to the buffer a tuple containing object attributes
+		self._buffer.append((product_object.barre_code,
+		 				 	 product_object.name,
+		 				 	 product_object.nutrition_grade,
+		 				 	 product_object.brand,
+		 				 	 product_object.ingredients,
+		 				 	 product_object.quantity,
+		 				    )
+						   )
+
 
 

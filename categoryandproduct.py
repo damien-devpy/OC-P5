@@ -14,7 +14,6 @@ class CategoryAndProduct:
     			 cursor_object=None,
     			 **kwargs
     			):
-
 		"""init method
 
 		Args:
@@ -75,14 +74,7 @@ class CategoryAndProduct:
 		"""Insert all data in buffer, in DB, trough the manager
 		"""
 
-		self._buffer = [(cap.category_id,
-						 cap.product_barre_code,
-						) 
-						for cap in self._buffer
-					   ]
-
 		self._manager.insert(self._cursor, CategoryAndProduct.TABLE_NAME, self._columns, self._buffer)
-
 
 	def filter(self, where_clause):
 		"""Allow to a add a where_clause
@@ -123,11 +115,14 @@ class CategoryAndProduct:
 
 			self._manager.select(self._cursor, Product.TABLE_NAME, columns)
 
+		# Storing result of the query in a list
 		result = list()
 
-
+		# For each row
 		for element in self._cursor:
 
+			# Temporary kwargs containing columns and data related read from
+			# the DB. 
 			tmp_kwargs = {columns[i]:element[i] for i in element}
 			r = CategoryAndProduct(**tmp_kwargs)
 
@@ -136,3 +131,18 @@ class CategoryAndProduct:
 		return result
 
 
+	def __add__(self, cap_object):
+		"""Allow to use the add operator between product_objects
+			Result in a list of cap_object
+
+		Args:
+
+			cap_object (categoryandproduct_object): cap object to add to the buffer
+			
+		"""
+		
+		# Adding to the buffer a tuple containing object attributes
+		self._buffer.append((cap_object.category_id,
+							 product_barre_code,
+							)
+						   )
