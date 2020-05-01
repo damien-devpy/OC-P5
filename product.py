@@ -36,9 +36,11 @@ class Product:
 			self._ingredients (str): attribute that represent ingredients column in DB
 			self._quantity (str): attribute that represent quantity column in DB
 
-			self._filter (bool): Default to False. Else, contain string like 'column=value' if the user want to add 
+			self._filter (bool): Default to False. 
+				Else, contain string like 'column=value' if the user want to add 
 				a where clause to a query
-			self._buffer (list): Container for category_objects for a massive insert
+			self._buffer (list): Container for product_objects for a massive insert
+				or select
 
 			self._pattern (regular expression) : Contain a compiled regular expression
 

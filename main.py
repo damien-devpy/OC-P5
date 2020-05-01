@@ -12,7 +12,7 @@ from categoryandproduct import CategoryAndProduct
 from substitution import Substitution
 
 from configuration import (CREDENTIALS,
-						   KEYWORDS_API_APP,
+						   ITEMS_TO_SHOW,
 						  )
 
 
@@ -38,15 +38,15 @@ def main():
 	# Filling it with products from the API
 	catalogue_object.get_data()
 
-
 	# Filling DB table category with products categories
 
-	categories = Category(manager=manager_object, cursor=sql_cursor)
+	categories = Category(manager, sql_cursor)
 
 	for each_category in catalogue_object.set_of_categories:
 		categories + Category(name=each_category)
 
 	categories.save_all()
+	cnx.commit()
 
 	# After insertion, getting each categories with his id
 	id_and_categories = categories.read()
@@ -55,10 +55,10 @@ def main():
 	# Filling DB table product with products
 	# Filling DB intermediary table category_and_product
 
-	all_products = Product(manager=manager_object, cursort=sql_cursor)
+	all_products = Product(manager, sql_cursor)
 
-	all_cat_and_prod = CategoryAndProduct(manager=manager_object,
-										  cursor=sql_cursor,
+	all_cat_and_prod = CategoryAndProduct(manager,
+										  sql_cursor,
 										 )
 
 	for each_product in catalogue_object.catalogue:
@@ -79,6 +79,7 @@ def main():
 
 	all_products.save_all()
 	all_cat_and_prod.save_all()
+	cnx.commit()
 
 	main_menu()
 
@@ -101,51 +102,86 @@ def main_menu:
 
 def choose_a_product:
 
-		page = 1
+	# Get all categories from the DB
+	id_and_categories = Category(manager, sql_cursor)
+	id_and_categories = id_and_categories.read()
 
-		showing_categories = 10
+	expgen = ((element.id_cat, element.name) for element in id_and_categories)
 
-		paging(page, showing_categories, id_and_categories)
+	# Setting page to show to 1
+	page = 1
 
-		afficher "10 premières catégories"
+	# Getting page 1
+	to_show = paging(page,
+					 [el[1] for el in expgen]
+					)
 
-		choix_utilisateur <- entrée_utilisateur()
+	# Showing page
+	for i, j in enumerate(to_show):
+		print(f"{i+1}. {j}")
 
-		récupérer les produits en base de la catégorie choisie
+	input_ok = False
 
-			categorie_utilisateur = CategoryAndProduct(manager_object=manager,
-													   cursor_object=curseur,
-													   category_id=choix_utilisateur,
-													  )
+	# User choose a category
+	while not input_ok:
 
-			categorie_utilisateur.filter_by(f'category_id={choix_utilisateur}')
-			liste_cb = categorie_utilisateur.read(columns='product_barre_code')
+		try:
+			user_choice = (int(input())) - 1
+			input_ok = 1
+			user_choice = to_show[user_choice]
+		except:
+			print("Please use a valid id")
 
-		liste_produits <- liste
+	# Getting the id of the category choosed by the user
+	category_id = Category(manager, sql_cursor)
+	category_id.filter_by(f'name={user_choice}')
+	category_id = category_id.read()[0].id_cat
 
-		pour chaque code_barre dans liste_cb:
-			p = Product(manager_object=manager,
-						cursor_object=curseur,
-					   )
+	# Getting barre code of products that match previous category id
+	list_of_products = CategoryAndProduct(manager, sql_cursor)
+	list_of_products.filter_by(f'category_id={category_id}')
+	list_of_products = list_of_products.read()
 
-			p.filter_by(f'barre_code={code_barre}')
-			p.read()
+	# Getting products information from their barre code
+	products_infos = Product(manager, sql_cursor)
 
-			liste_produits <- p
+	for bc in list_of_products:
+		products_infos.filter_by(f'barre_code={bc}')
+		products_infos + products_infos.read()[0]
 
-		pour chaque produits dans liste_produits:
+	page = 1
 
-			afficher le produit
+	# Getting names of all products
+	expgen = (element.name for element in products_infos.buffer)
 
-		choix_utilisateur <- entrée_utilisateur()
+	to_show = paging(page,
+					 [i for i in expgen],
+					)
 
-		récupérer les informations dans liste_produits[produit_choisi]
+	# Showing page
+	for i, j in enumerate(to_show):
+		print(f"{i+1}. {j}")
 
-		afficher "Détail du produit"
+	input_ok = False
 
-		afficher "1. Substitution"
+	# User choose a product
+	while not input_ok:
 
-		afficher "2. Retour au menu principal"
+		try:
+			user_choice = (int(input())) - 1
+			input_ok = 1
+			user_choice = to_show[user_choice]
+		except:
+			print("Please use a valid id")
+
+	choosen_product = [element for element in products_infos.buffer if element.name = user_choice]
+
+	for attr in choosen_product:
+		print(attr)
+
+
+	print("1. Substitution")
+	print("2. Menu principal")
 
 		choix_utilisateur <- entrée_utilisateur()
 
@@ -158,8 +194,8 @@ def choose_a_product:
 
 			afficher "Enregistrement ?"
 
-			record_substitution = Substitution(manager_object=manager,
-											   cursor_object=curseur,
+			record_substitution = Substitution(manager,
+											   sql_cursor,
 											   barre_code_to_substitute=barre_code_choix_utilisateur,
 											   barre_code_substitute=product_subsitute['barre_code'],
 											  )
@@ -180,7 +216,7 @@ def choose_a_product:
 
 def anciennes_substitutions():
 
-	all_substititions = Substitution(manager_object=manager, cursor_object=curseur)
+	all_substititions = Substitution(manager, sql_cursor)
 
 	historique = all_substititions.read()
 
@@ -194,8 +230,8 @@ def anciennes_substitutions():
 
 	si 1:
 
-		bc_to_substitute = Product(manager_object=manager, cursor_object=curseur)
-		bc_substitute = Product(manager_object=manager, cursor_object=curseur)
+		bc_to_substitute = Product(manager, sql_cursor)
+		bc_substitute = Product(manager, sql_cursor)
 
 		bc_to_substitute.filter_by(f'barre_code={historique[0]}')
 		bc_to_substitute = bc_to_substitute.read()
@@ -228,28 +264,29 @@ def anciennes_substitutions():
 	fin si
 
 
-def entrée_utilisateur():
+def paging(page, list_of_items):
 
-	Afficher "Question"
+	# How much (ITEMS_TO_SHOW) is in list_of_items
+	how_much_to_show = len(list_of_items) // ITEMS_TO_SHOW
 
-	return input utilisateur
+	# Number of pages
+	total_pages = how_much_to_show + 1 if ((list_of_items) % ITEMS_TO_SHOW) else how_much_to_show
 
-def paging(page, nb_items_to_show, list_of_items):
+	# If page asked doesn't exist, return last existing one
+	if page > total_pages:
 
-	debut = (page-1) + nb_items_to_show
-	fin = page*nb_items_to_show
+		last_page = ((total_pages - 1) * ITEMS_TO_SHOW) + 1
 
-	si la page <= (len(list_of_items)%nb_items_to_show):
+		return list_of_items[last_page:]
 
-		return list_of_items[debut:fin]
+	# Else, return items that match page asked
+	else:
 
-	sinon si la page > (len(list_of_items)%nb_items_to_show) et len(list_of_items)%10 != 0
+		prev_page = (page - 1) if (page > 1) else 1
+		start = 1 + (ITEMS_TO_SHOW * prev_page)
+		end = (page * ITEMS_TO_SHOW) if ((page * ITEMS_TO_SHOW) < len(list_of_items)) else len(list_of_items)
 
-		return list_of_items[::-(len(list_of_items)%nb_items_to_show)]
-
-	sinon:
-
-		return list_of_items[::-nb_items_to_show]
+		return list_of_items[start:end]
 
 
 if __name__ = "__main__":

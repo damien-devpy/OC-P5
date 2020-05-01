@@ -28,14 +28,16 @@ CATEGORIES_TO_SCRAPE = {'chips-a-l-ancienne', # old-fashioned-crisps
 }
 
 # Switching keywords of the API for the app's own kw
-KEYWORDS_API_APP = {'code': 'barre_code',
-					'product_name_fr': 'name',
-					'nutriscore_grade': 'nutrition_grade',
-					'brands': 'brand',
-					'ingredients_text_debug': 'ingredients',
-					'quantity': 'quantity',
-					'categories': 'categories',
-					}
+KEYWORDS = {'code': 'barre_code',
+			'product_name_fr': 'name',
+			'nutriscore_grade': 'nutrition_grade',
+			'brands': 'brand',
+			'ingredients_text_debug': 'ingredients',
+			'quantity': 'quantity',
+			'categories': 'categories',
+	   	   }
+
+ITEMS_TO_SHOW = 10
 
 
 # Number of products per categories to scrap

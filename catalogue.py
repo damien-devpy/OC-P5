@@ -6,6 +6,7 @@ from configuration import (URL,
 						   CATEGORIES_TO_SCRAPE,
 						   PRODUCTS_PER_CATEGORIES,
 						   FIELDS,
+						   KEYWORDS,
 						  )
 
 
@@ -62,18 +63,20 @@ class Catalogue:
 
 		for product in raw_catalogue:
 
-			# We don't wan't empty fields in our catalogue
+			# We don't want empty fields in our catalogue
 			if_all_fields_are_complete = all(True if product[j] != '' else False 
 											 for j in product
 											)
 
 			# If the product is complete, all fields wanted and filled
-			if len(product) == 7 and if_all_fields_are_complete:
+			if len(product) == len(KEYWORDS) and if_all_fields_are_complete:
 
-				# Add a tuple containing product informations to the catalogue
-				self._catalogue.append(product)
+				# Append to self._catalogue every product (dict type) by switching 
+				# for more convenient keywords
+				switching_kw = {KEYWORDS[key]:value for key, value in product.items()}
+				self._catalogue.append(switching_kw)
 
 				for c in product['categories'].split(', '):
 
-					# Building a set of categories to which product belong
+					# Building a set of (unique) categories to which product belong
 					self._set_of_categories.add(c)
