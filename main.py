@@ -1,6 +1,6 @@
 # coding: utf-8
 
-import mysql.connector
+from mysql import connector
 
 from manager import Manager
 
@@ -18,68 +18,14 @@ from configuration import (CREDENTIALS,
 
 def main():
 
-	# Connection to mysql with user credentials
-	cnx = mysql.connector.connect(CREDENTIALS)
-
-	# Creating a cursor wich interact with DB
-	sql_cursor = cnx.cursor()
-
-	# Creating the DB from a sql file
-	with open('create_db.sql', 'r', encodig='utf-8') as sql_file:
-		for line in sql_file:
-			sql_cursor.execute(line)
-
-	# Manager object in charge of SQL queries
-	manager_object = Manager()
-
 	# Creating an empty catalogue
 	catalogue_object = Catalogue()
 
 	# Filling it with products from the API
 	catalogue_object.get_data()
 
-	# Filling DB table category with products categories
-
-	categories = Category(manager, sql_cursor)
-
-	for each_category in catalogue_object.set_of_categories:
-		categories + Category(name=each_category)
-
-	categories.save_all()
-	cnx.commit()
-
-	# After insertion, getting each categories with his id
-	id_and_categories = categories.read()
-
-
-	# Filling DB table product with products
-	# Filling DB intermediary table category_and_product
-
-	all_products = Product(manager, sql_cursor)
-
-	all_cat_and_prod = CategoryAndProduct(manager,
-										  sql_cursor,
-										 )
-
-	for each_product in catalogue_object.catalogue:
-		all_products + Product(each_product)
-
-		# For each couple (id, category) in table category
-		for element in id_and_categories:
-			# If the current product belong to the current category
-			if element[1] in each_product[6]:
-
-				# Saving couple (category_id, product_barre_code)
-				# in intermediary table category_and_product
-				tmp_cap = CategoryAndProduct(category_id=element[0],
-											 product_barre_code=each_product[0],
-											)
-				all_cat_and_prod + tmp_cat
-
-
-	all_products.save_all()
-	all_cat_and_prod.save_all()
-	cnx.commit()
+	# Filling the DB with data previously received
+	catalogue_object.filling_db()
 
 	main_menu()
 
@@ -103,8 +49,7 @@ def main_menu:
 def choose_a_product:
 
 	# Get all categories from the DB
-	id_and_categories = Category(manager, sql_cursor)
-	id_and_categories = id_and_categories.read()
+	id_and_categories = Category()
 
 	expgen = ((element.id_cat, element.name) for element in id_and_categories)
 

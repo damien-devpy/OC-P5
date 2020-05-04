@@ -9,6 +9,10 @@ from configuration import (URL,
 						   KEYWORDS,
 						  )
 
+from product import Product
+from category import Category
+from model import Model
+
 
 class Catalogue:
 	"""In charge of calling the API, getting back data
@@ -30,6 +34,7 @@ class Catalogue:
 
 	def get_data(self):
 		"""In charge of calling the API and receiving raw data
+		
 		"""
 
 		i = 0
@@ -49,6 +54,32 @@ class Catalogue:
 
 				i = len(self._catalogue) # Setting i to the number of products scrapped
 				k += 1 # Turning page
+
+
+
+	def filling_db(self):
+		"""Forward data in self._catalogue and self._set_of_categories to the 
+			models for filling database
+
+		"""
+
+		list_of_categories = list(self._set_of_categories)
+		list_of_products = list(self._catalogue)
+
+		Model.save_all(list_of_categories)
+
+		for each_category in list_of_categories:
+
+			for each_product in list_of_products:
+
+				for sub_category in each_product.belong_to:
+
+					if each_category.name == sub_category.name:
+						sub_category.id = each_category.id
+
+
+		Model.save_all(list_of_products)
+
 
 
 	def _processing_data(self, raw_catalogue):
@@ -71,12 +102,18 @@ class Catalogue:
 			# If the product is complete, all fields wanted and filled
 			if len(product) == len(KEYWORDS) and if_all_fields_are_complete:
 
-				# Append to self._catalogue every product (dict type) by switching 
-				# for more convenient keywords
-				switching_kw = {KEYWORDS[key]:value for key, value in product.items()}
-				self._catalogue.append(switching_kw)
+				# Append to self._catalogue every product as a Product object
+				# and switching for more convenient keywords
+				product_obj = Product({KEYWORDS[key]:value for key, value in product.items()})
 
+				# For every word in the json key 'categories'
 				for c in product['categories'].split(', '):
 
-					# Building a set of (unique) categories to which product belong
-					self._set_of_categories.add(c)
+					# Turn it to a Category object
+					category_obj = Category(c)
+
+					# Append it to the Product object which he belong to
+					product_obj.belong_to.append(category_obj)
+
+					# Building a unique set of Category object
+					self._set_of_categories(category_obj)
