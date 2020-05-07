@@ -24,6 +24,6 @@ class Substitution(Model):
 
 		Model.__init__(self)
 
-		self._id = kwargs.get['id']
-        self._barre_code_to_substitute = kwargs.get['barre_code_to_substitute']
-        self._barre_code_substitute = kwargs.get['barre_code_substitute']
+		self.id = kwargs.get['id']
+		self.barre_code_to_substitute = kwargs.get('barre_code_to_substitute')
+		self.barre_code_substitute = kwargs.get('barre_code_substitute')

@@ -1,25 +1,24 @@
 # coding: utf-8
 
 from mysql import connector
-from configuration import USER
+from configuration import DATABASE
+import pdb
 
 class Manager:
 	"""In chage of managing data base
 	"""
 
-	def __init__(self):
+	def create_db(self):
+		"""Creating the database from a sql file
 		"""
 
-		Args: 
-
-			self._cnx (object connector): Used to connect to the DB
-			self._cursor (object cursor): Used to interact (i.e select, create)
-				with the DB
-
-		"""
-
-		self._cnx = connector.connect(USER)
+		self._cnx = connector.connect(user='root', host='localhost', password='admin')
 		self._cursor = self._cnx.cursor()
+
+		with open(DATABASE, mode='r', encoding='utf-8') as sql_file:
+			for line in sql_file:
+				self._cursor.execute(line)
+
 
 
 	def insert_all(self, list_of_objects):
@@ -31,22 +30,27 @@ class Manager:
 
 		"""
 
-		# Before inserting data in DB, checking if the object contain
+		# Before inserting data in DB, checking if objects contains
 		# a relation to any liaison table
-		relation_exist = _is_there_relation(list_of_objects[0])
+		relation_exist = self._is_there_relation(list_of_objects[0])
 
 		if relation_exist:
 
 			for an_object in list_of_objects:
 
 				# Filling table with the current object
-				insert(an_object, set_id=True)
+				self.insert(an_object, set_id=True)
 
-				data_liaison_table = _get_liaison_data(an_object)
+				data_liaison_table = self._get_liaison_data(an_object)
+				
+				# Filling table for every objects in data_liaison_table
+				for liaison_object in data_liaison_table:
+					
+					self.insert(liaison_object, set_id=True)
 
-				# Filling the liaison table with the data to insert in it
-				# and the current object linked with
-				_filling_liaison_table(an_object, data_liaison_table)
+				# After inserting every objects in their proper tables
+				# Filling the liaison table
+				self._filling_liaison_table(an_object, data_liaison_table)
 
 			self._cnx.commit()
 
@@ -71,18 +75,21 @@ class Manager:
 
 		"""
 
-		table = object_to_inspect.TABLE_NAME
-		columns = _get_columns(object_to_inspect)
-		values = _get_values(object_to_inspect, columns)
-		replacement = _get_placeholders(values)
+		table = object_to_insert.TABLE_NAME
+		columns = self._get_columns(object_to_insert)
+		values = self._get_values(object_to_insert, tuple(columns.split(', ')))
+		replacement = self._get_placeholders(values)
+		duplicate_key = "ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id)"
 
-		self._cursor.execute(f"INSERT INTO {table} {columns} VALUES {replacement}", values)
+		query = f"INSERT INTO {table} ({columns}) VALUES ({replacement}) {duplicate_key}"
+
+		self._cursor.execute(query, values)
 
 		if set_id:
 
-			fresh_id = _get_back_id()
+			fresh_id = self._get_back_id()
 
-			setattr(object_to_inspect, 'id', fresh_id)
+			setattr(object_to_insert, 'id', fresh_id)
 
 
 	def select(self, object_to_read, column=None, **kwargs):
@@ -108,17 +115,17 @@ class Manager:
 		# If a specific column is asked
 		if column:
 
-			return _select_column(self, object_to_read, column)
+			return self._select_column(self, object_to_read, column)
 
 		# Elif, a specific row is asked
 		elif kwargs:
 
-			_select_row(self, object_to_read, **kwargs)
+			self._select_row(self, object_to_read, **kwargs)
 
 		# Else, an entire table is asked
 		else:
 
-			return _select_table(self, object_to_read)
+			return self._select_table(self, object_to_read)
 
 
 
@@ -158,7 +165,7 @@ class Manager:
 
 		list_of_values = list()
 
-		for value in self._cursor.fetchall()
+		for value in self._cursor.fetchall():
 			object_to_read.column = value[0]
 			list_of_values.append(object_to_read)
 
@@ -179,12 +186,12 @@ class Manager:
 		"""
 
 		table = object_to_read.TABLE_NAME
-		columns = _get_columns(object_to_read)
+		columns = self._get_columns(object_to_read)
 
 		# Building where clause from the keyword argument
 		keyword = [f'{i}={j}' for i, j in kwargs.items()][0]
 
-		self._cursor.execute(f"SELECT {columns} FROM {table} WHERE {keyword}")
+		self._cursor.execute(f"SELECT ({columns}) FROM {table} WHERE {keyword}")
 
 		# Getting the result of the query
 		result = self._cursor.fetchone()
@@ -205,9 +212,9 @@ class Manager:
 
 		"""
 
-		columns = _get_columns(object_to_read)
+		columns = self._get_columns(object_to_read)
 
-		self._cursor.execute(f"SELECT {columns} FROM {table}")
+		self._cursor.execute(f"SELECT ({columns}) FROM {table}")
 
 		list_of_objects = list()
 
@@ -231,24 +238,23 @@ class Manager:
 
 			object_linked (model object): Model object linked to the liaison
 				table by a many to many relation
-			liaison_data (list): List of data from model object to insert in 
-			the liaison table regarding the object_linked
+			liaison_data (list): Model objects to insert in 
+			the liaison table with the object_linked
 
 		"""
 
-		table = object_linked.TABLE_NAME + '_' liaison_data[0].TABLE_NAME
-		columns = (object_linked.TABLE_NAME + '_id', 
-				   liaison_data.TABLE_NAME+ '_id')
-		replacement = _get_placeholders(columns)
+		table = object_linked.TABLE_NAME + '_' + liaison_data[0].TABLE_NAME
+		columns = f"{object_linked.TABLE_NAME + '_id' + ', ' + liaison_data[0].TABLE_NAME + '_id'}"
+		replacement = self._get_placeholders(tuple(columns.split(', ')))
 
 		list_of_values = list()
 
 		# For each object in liaison data
-		# Getting the attribute id of it
+		# Getting the id attribute of it
 		for an_object in liaison_data:
 			list_of_values.append((object_linked.id, an_object.id))
 
-		self._cursor.executemany(f"INSERT INTO {table} {columns} VALUES {replacement}", list_of_values)
+		self._cursor.executemany(f"INSERT INTO {table} ({columns}) VALUES ({replacement})", list_of_values)
 
 
 
@@ -258,7 +264,7 @@ class Manager:
 
 		Args: 
 
-			object_to_inspect (model object): Model object inspect
+			object_to_inspect (model object): Model object to inspect
 
 
 		Return:
@@ -270,7 +276,8 @@ class Manager:
 
 		for attr in object_to_inspect.__dict__.values():
 
-			if isinstance(attr, list):
+			# If attr is a list and containing data, i.e. existing relation
+			if isinstance(attr, list) and len(attr) > 0 :
 
 				return True
 
@@ -315,12 +322,12 @@ class Manager:
 		for i, attr in enumerate(all_attr):
 
 			# If current attr not a manager either a many to many relation
-			if i > 1 and not isinstance(attr, list):
+			if i > 1 and not isinstance(all_attr[attr], list):
 
 				columns.append(attr)
 
 
-		return tuple(columns)
+		return ", ".join(columns)
 
 
 
@@ -357,7 +364,7 @@ class Manager:
 
 		"""
 
-		return tuple([", ".join('%s' for i in range(len(reference)))])
+		return ", ".join('%s' for i in range(len(reference)))
 
 
 
@@ -370,6 +377,6 @@ class Manager:
 
 		"""
 
-		self._cursor.execute('LAST_INSERT_ID()')
+		self._cursor.execute("SELECT LAST_INSERT_ID()")
 
-		return self._cursor.fetchall()[0]
+		return self._cursor.fetchall()[0][0]

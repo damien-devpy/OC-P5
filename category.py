@@ -1,5 +1,7 @@
 # coding: utf-8
 
+from model import Model
+
 class Category(Model):
 	"""Model class of the category table in database
 	"""
@@ -22,5 +24,5 @@ class Category(Model):
 
 		Model.__init__(self)
 
-		self._id = kwargs.get['id']
-		self._name = kwargs.get['name']
+		self.id = kwargs.get('id')
+		self.name = kwargs.get('name')

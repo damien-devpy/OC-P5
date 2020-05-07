@@ -11,6 +11,8 @@ from product import Product
 from categoryandproduct import CategoryAndProduct
 from substitution import Substitution
 
+from menu import Menu
+
 from configuration import (CREDENTIALS,
 						   ITEMS_TO_SHOW,
 						  )
@@ -26,8 +28,70 @@ def main():
 
 	# Filling the DB with data previously received
 	catalogue_object.filling_db()
+	
+	category = Category()
+	product = Product()
+	substitution = Substitution()
 
-	main_menu()
+	menu = Menu()
+	
+	print("Menu principal:")
+	print("1. Choissisez un aliment à substituer")
+	print("2. Retrouvez vos précédentes substitutions")
+
+	input_user = menu.input_user()
+	
+	if input_user == 1:
+	
+			to_display, page = menu.sub_menu(category)
+		
+			pour chaque élément dans to_display:
+			
+				afficher l''élément
+				
+			fin pour
+				
+			print("Choisissez une catégorie de produits")
+			print("Utilisez '<' et '>' pour changer de page")
+			
+			input_user = menu.input_user()
+			
+			si l''utilisateur souhaite changer de page:
+			
+				page+1 ou page-1
+			
+				to_display = menu.sub_menu(category, page)
+				
+			fin si
+				
+			sinon:
+			
+			to_display, page = menu.sub_menu(product, input_user)
+			
+			pour chaque élément dans to_display:
+			
+				afficher l''élément
+				
+			fin pour
+			
+			print("Choississez un produit")
+			print("Tapez le chiffre du produit pour trouver un produit de substitution ou \
+				Dnom_du_produit pour voir le détail")
+			
+			input_user = menu.input_user()
+				
+			
+	fin si
+	
+	sinon:
+	
+	fin sinon
+	
+		
+		
+	
+
+______________________________________________________________________________
 
 
 def main_menu:

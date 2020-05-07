@@ -1,5 +1,7 @@
 # coding: utf-8
 
+from manager import Manager
+
 class Model:
 	"""Model class representing table database
 	"""
@@ -13,8 +15,13 @@ class Model:
 
 		"""
 
-
 		self._manager = Manager()
+
+
+	def creating_db(self):
+
+		self._manager.create_db()
+
 
 
 	def save_all(self, list_of_objects):
@@ -29,6 +36,7 @@ class Model:
 		self._manager.insert_all(list_of_objects)
 
 
+
 	def save(self):
 		"""Used for insert data through the manager
 		"""
@@ -36,7 +44,8 @@ class Model:
 		self._manager.insert(self)
 
 
-	def get_row(self, **kwargs):
+
+	def get_rows(self, **kwargs):
 		"""Used to get data from a specific key/value keyword argument
 
 		Args:
@@ -46,6 +55,7 @@ class Model:
 		"""
 
 		self._manager.select(self, **kwargs)
+
 
 
 	def find(self, column):
@@ -65,6 +75,8 @@ class Model:
 		list_of_values = self._manager.select(self, column)
 
 		return list_of_values
+
+
 
 	def read(self):
 		"""Used to select the entire table in DB

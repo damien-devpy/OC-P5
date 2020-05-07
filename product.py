@@ -28,15 +28,15 @@ class Product(Model):
 
 		Model.__init__(self)
 
-		self._id = kwargs.get['id']
-		self._barre_code = kwargs.get['barre_code']
-		self._name = kwargs.get['name']
-		self._nutrition_grade = kwargs.get['nutrition_grade']
-		self._brand = kwargs.get['brand']
-		self._ingredients = kwargs.get['ingredients']
-		self._quantity = kwargs.get['quantity']
+		self.id = kwargs.get('id')
+		self.barre_code = kwargs.get('barre_code')
+		self.name = kwargs.get('name')
+		self.nutrition_grade = kwargs.get('nutrition_grade')
+		self.brand = kwargs.get('brand')
+		self.ingredients = kwargs.get('ingredients')
+		self.quantity = kwargs.get('quantity')
 
-		self._belong_to = list()
+		self.belong_to = list()
 
 
 	def get_substitute(self, user_category):
@@ -66,11 +66,11 @@ class Product(Model):
 		substitute = self.read()[0]
 
 		# Making self the product of substitution
-		self._barre_code = substitute.get['barre_code']
-		self._name = substitute.get['name']
-		self._nutrition_grade = substitute.get['nutrition_grade']
-		self._brand = substitute.get['brand']
-		self._ingredients = substitute.get['ingredients']
-		self._quantity substitute.get['quantity']
+		self._barre_code = substitute.get('barre_code')
+		self._name = substitute.get('name')
+		self._nutrition_grade = substitute.get('nutrition_grade')
+		self._brand = substitute.get('brand')
+		self._ingredients = substitute.get('ingredients')
+		self._quantity = substitute.get('quantity')
 
 
