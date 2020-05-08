@@ -3,7 +3,7 @@
 # File name of the SQL script creating the DB
 DATABASE = 'create_db.sql'
 
-# CREDENTIALS = {'user':'root', 'password':'admin', 'host':'localhost'}
+CREDENTIALS = {'user':'admin', 'password':'admin', 'host':'localhost'}
 
 #Header for the API
 HEADER = {'User-Agent': 'OFF App in progress - v0.1'}

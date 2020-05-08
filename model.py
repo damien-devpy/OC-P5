@@ -1,6 +1,7 @@
 # coding: utf-8
 
 from manager import Manager
+import pdb
 
 class Model:
 	"""Model class representing table database

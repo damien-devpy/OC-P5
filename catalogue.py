@@ -12,7 +12,6 @@ from configuration import (URL,
 from product import Product
 from category import Category
 from model import Model
-import time
 import pdb
 
 
@@ -89,7 +88,7 @@ class Catalogue:
 				product_obj = Product(**{KEYWORDS[key]:value for key, value in product.items()})
 
 				# For every word in the json key 'categories'
-				for c in product['categories'].split(', '):
+				for c in product['categories'].split(','):
 
 					# Turn it to a Category object
 					category_obj = Category(name=c)

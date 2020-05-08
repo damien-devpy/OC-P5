@@ -1,19 +1,34 @@
 # coding: utf-8
 
 from mysql import connector
-from configuration import DATABASE
+from configuration import (DATABASE,
+						   CREDENTIALS,
+						  )
 import pdb
+from copy import copy
 
 class Manager:
 	"""In chage of managing data base
 	"""
 
+	cnx = connector.connect(user=CREDENTIALS['user'],
+							host=CREDENTIALS['host'],
+							password=CREDENTIALS['password'],
+						   )
+
+	cursor = cnx.cursor()
+
+
+	def __init__(self):
+
+		self._cursor = Manager.cursor
+		self._cnx = Manager.cnx
+
+
+
 	def create_db(self):
 		"""Creating the database from a sql file
 		"""
-
-		self._cnx = connector.connect(user='root', host='localhost', password='admin')
-		self._cursor = self._cnx.cursor()
 
 		with open(DATABASE, mode='r', encoding='utf-8') as sql_file:
 			for line in sql_file:
@@ -110,22 +125,20 @@ class Manager:
 
 		"""
 
-		table = object_to_read.TABLE_NAME
-
 		# If a specific column is asked
 		if column:
 
-			return self._select_column(self, object_to_read, column)
+			return self._select_column(object_to_read, column)
 
 		# Elif, a specific row is asked
 		elif kwargs:
 
-			self._select_row(self, object_to_read, **kwargs)
+			self._select_row(object_to_read, **kwargs)
 
 		# Else, an entire table is asked
 		else:
 
-			return self._select_table(self, object_to_read)
+			return self._select_table(object_to_read)
 
 
 
@@ -161,13 +174,14 @@ class Manager:
 
 		table = object_to_read.TABLE_NAME
 
-		self._cursor.execute(f"SELECT {column} FROM {table}")
+		self._cursor.execute(f"SELECT ({column}) FROM {table}")
 
 		list_of_values = list()
 
 		for value in self._cursor.fetchall():
-			object_to_read.column = value[0]
-			list_of_values.append(object_to_read)
+			setattr(object_to_read, column, value[0])
+			list_of_values.append(copy(object_to_read))
+
 
 		return list_of_values
 
