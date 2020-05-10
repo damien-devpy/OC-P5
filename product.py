@@ -26,8 +26,6 @@ class Product(Model):
 
 		"""
 
-		Model.__init__(self)
-
 		self.id = kwargs.get('id')
 		self.barre_code = kwargs.get('barre_code')
 		self.name = kwargs.get('name')

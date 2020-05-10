@@ -33,8 +33,9 @@ class Catalogue:
 
 		"""
 
-		self._model = Model()
 		self._catalogue = list() # Empty catalogue of products
+
+
 
 	def get_data(self):
 		"""In charge of calling the API and receiving raw data
@@ -50,18 +51,6 @@ class Catalogue:
 				self._processing_data(response.json()['products'])
 
 				print(len(self._catalogue))
-
-
-
-
-	def filling_db(self):
-		"""Forward data in self._catalogue and self._set_of_categories to the 
-			models for filling database
-
-		"""
-
-		self._model.creating_db()
-		self._model.save_all(self._catalogue)
 
 
 

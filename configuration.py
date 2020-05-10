@@ -2,6 +2,7 @@
 
 # File name of the SQL script creating the DB
 DATABASE = 'create_db.sql'
+DATABASE_NAME = 'alimentation'
 
 # CREDENTIALS = {'user':'root', 'password':'admin', 'host':'localhost'}
 

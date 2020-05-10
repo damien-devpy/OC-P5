@@ -22,7 +22,5 @@ class Category(Model):
 
 		"""
 
-		Model.__init__(self)
-
 		self.id = kwargs.get('id')
 		self.name = kwargs.get('name')
