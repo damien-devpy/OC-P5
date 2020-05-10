@@ -99,14 +99,14 @@ class Manager:
 
 
 
-	def select(self, object_to_read, column=None, **kwargs):
+	def select(self, an_object, column=None, **kwargs):
 		"""In charge of R part of CRUD (read), for selecting data in DB
 
 		Args:
 
-			object_to_read (model object): Model object used to select table to
-				read, and filled with informations from DB if a specific row
-				where asked
+			an_object: If select query is for a column or a table, an_object is
+				a class reference for the table in database. For a specific row
+				an_object will be a model object
 
 			column (str): Default to None. Otherwise, meaning method has to
 				look for a specific column in the table DB
@@ -117,22 +117,58 @@ class Manager:
 
 		"""
 
-		table = object_to_read.TABLE_NAME
-
 		# If a specific column is asked
 		if column:
 
-			return self._select_column(object_to_read, column)
+			return self._select_column(an_object, column)
 
 		# Elif, a specific row is asked
 		elif kwargs:
 
-			self._select_row(object_to_read, **kwargs)
+			self._select_row(an_object, **kwargs)
 
 		# Else, an entire table is asked
 		else:
 
-			return self._select_table(object_to_read)
+			return self._select_table(an_object)
+
+
+
+	def select_through_join(self,
+							class_ref_ending,
+							class_ref_starting,
+							**kwargs,
+							):
+		"""Specific method for selecting data in DB if we need to go through
+			table liaison
+
+		"""
+
+		starting_table = class_ref_starting.TABLE_NAME
+		key = f"{next(i for i in kwargs.keys())}"
+		value = f"{kwargs[key]}"
+
+		ending_table = class_ref_ending.TABLE_NAME
+
+		# Getting columns of the ending table, represent by attributes of the 
+		# class reference
+		ending_columns = self._get_columns(class_ref_ending())
+
+		# Using query join, table name is needed with columns
+		# in order to not being ambiguous 
+		ending_columns = ", ".join(f"{ending_table}.{i}" for i in ending_columns.split(", "))
+
+		liaison_table_name = sorted([starting_table, ending_table])
+		liaison_table_name = liaison_table_name[1] + "_" + liaison_table_name[0]
+
+		self._cursor.execute(f"""
+			SELECT {ending_columns} FROM {ending_table}
+			INNER JOIN {liaison_table_name}
+			ON {ending_table}.id = {liaison_table_name}.{ending_table}_id
+			INNER JOIN {starting_table}
+			ON {starting_table}.id = {liaison_table_name}.{starting_table}_id
+			WHERE {starting_table}.{key} = "{value}" """
+		)
 
 
 
@@ -195,7 +231,7 @@ class Manager:
 		columns = self._get_columns(object_to_read)
 
 		# Building where clause from the keyword argument
-		keyword = [f'{i}={j}' for i, j in kwargs.items()][0]
+		keyword = next((f"{i}={j}" for i, j in kwargs.items()))
 
 		query = f"SELECT {columns} FROM {table} WHERE {keyword}"
 
