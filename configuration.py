@@ -16,13 +16,14 @@ URL = 'https://fr.openfoodfacts.org/cgi/search.pl?action=process&tagtype_0=categ
 FIELDS = 'code,product_name_fr,nutriscore_grade,brands,ingredients_text_debug,quantity,categories'
 
 # Products will be from this categories
-CATEGORIES_TO_SCRAPE = {'jambons-blancs', # white-hams
-			  	        'brioches-pur-beurre', # pure-butter-brioche
-						'gaufres', # waffles
-			  			'sauces-pesto', # pestos
-}
+CATEGORIES_TO_SCRAPE = {'rillettes-de-canard',
+			  	        'yaourts-sucres',
+						'petits-beurres',
+			  			'camemberts',
+			  			'quatre-quarts'
+			  		   }
 
-PAGE_SIZE = 50
+PAGE_SIZE = 500
 
 # Switching keywords of the API for the app's own kw
 KEYWORDS = {'code': 'barre_code',

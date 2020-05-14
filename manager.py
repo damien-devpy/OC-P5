@@ -4,6 +4,8 @@ from mysql import connector
 from configuration import (DATABASE,
 						   DATABASE_NAME,
 						  )
+from keyworderror import KeywordError
+from product import Product
 import pdb
 
 class Manager:
@@ -85,9 +87,17 @@ class Manager:
 		columns = self._get_columns(object_to_insert)
 		values = self._get_values(object_to_insert, tuple(columns.split(', ')))
 		replacement = self._get_placeholders(len(values))
-		duplicate_key = "ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id)"
 
-		query = f"INSERT INTO {table} ({columns}) VALUES ({replacement}) {duplicate_key}"
+		# If the object to insert contain a duplicate key, meaning there is
+		# a risk for registering twice the same information
+		if 'duplicate_key' in object_to_insert.__dict__:
+
+			duplicate_key = "ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id)"
+			query = f"INSERT INTO {table} ({columns}) VALUES ({replacement}) {duplicate_key}"
+
+		else:
+
+			query = f"INSERT INTO {table} ({columns}) VALUES ({replacement})"
 
 		self._cursor.execute(query, values)
 
@@ -104,7 +114,7 @@ class Manager:
 
 		Args:
 
-			an_object: If select query is for a column or a table, an_object is
+			class_ref: If select query is for a column or a table, an_object is
 				a class reference for the table in database. For a specific row
 				an_object will be a model object
 
@@ -145,8 +155,8 @@ class Manager:
 		"""
 
 		starting_table = class_ref_starting.TABLE_NAME
-		key = f"{next(i for i in kwargs.keys())}"
-		value = f"{kwargs[key]}"
+		
+		key, value = self._get_where_clause(**kwargs)
 
 		ending_table = class_ref_ending.TABLE_NAME
 
@@ -156,13 +166,13 @@ class Manager:
 
 		# Using query join, table name is needed with columns
 		# in order to not being ambiguous 
-		ending_columns = ", ".join(f"{ending_table}.{i}" for i in ending_columns.split(", "))
+		ending_table_columns = ", ".join(f"{ending_table}.{i}" for i in ending_columns.split(", "))
 
 		liaison_table_name = sorted([starting_table, ending_table])
 		liaison_table_name = liaison_table_name[1] + "_" + liaison_table_name[0]
 
 		self._cursor.execute(f"""
-			SELECT {ending_columns} FROM {ending_table}
+			SELECT {ending_table_columns} FROM {ending_table}
 			INNER JOIN {liaison_table_name}
 			ON {ending_table}.id = {liaison_table_name}.{ending_table}_id
 			INNER JOIN {starting_table}
@@ -170,23 +180,40 @@ class Manager:
 			WHERE {starting_table}.{key} = "{value}" """
 		)
 
+		tmp_list = list()
+
+		for value in self._cursor.fetchall():
+			
+			tmp_object = class_ref_ending()
+
+			for i, c in enumerate(tuple(ending_columns.split(', '))):
+
+				setattr(tmp_object, c, value[i])
+
+			tmp_list.append(tmp_object)
 
 
-	def substitution(self, cursor_object, user_category, nutrition_grade_to_substitute):
+		return tmp_list
+
+
+
+	def substitution(self, product_name):
 		"""Specifically in charge for looking a product substitution
 		"""
 
-		# cursor_object.execute(f"""SELECT barre_code, MIN(nutrition_grade)
-		# 										FROM (
-		# 										SELECT product.barre_code, product.nutrition_grade FROM product
-		# 										INNER JOIN category_and_products
-		# 										ON product.barre_code = category_and_product.product_barre_code
-		# 										INNER JOIN category_and_products as c_a_p
-		# 										ON category_and_product.category_id = c_a_p.category_id
-		# 										WHERE product.nutrition_grade < {nutrition_grade_to_substitute}
-		# 											AND category_and_product.category_id = {user_category}
-		# 										) as minimal_nutriscore;)"""
-		# 										)
+		f"""SELECT * FROM (
+			SELECT product.id, product.barre_code, product.nutrition_grade FROM product
+			INNER JOIN product_category
+			ON product.id = product_category.product_id
+			INNER JOIN category
+			ON product_category.category_id = category.id
+			INNER JOIN category as category_2
+			ON category.name = category_2.name
+			WHERE category_2.name = "") as products"""
+
+
+
+############################## PRIVATE METHODS ##############################
 
 
 
@@ -231,43 +258,60 @@ class Manager:
 		columns = self._get_columns(object_to_read)
 
 		# Building where clause from the keyword argument
-		keyword = next((f"{i}={j}" for i, j in kwargs.items()))
+		# key = next((f"{i}" for i in kwargs.keys()))
+		# value = f"{kwargs[key]}"
 
-		query = f"SELECT {columns} FROM {table} WHERE {keyword}"
+		key, value = self._get_where_clause(**kwargs)
 
-		self._cursor.execute(query, keyword)
+		query = f"SELECT {columns} FROM {table} WHERE {key}='{value}'"
 
-		# Getting the result of the query
-		result = self._cursor.fetchone()
+		self._cursor.execute(query)
 
-		# Filling attributes object with result
-		for i, c in enumerate(tuple(columns.split(", "))):
-			setattr(object_to_read, c, result[i])
+		# If keyword asked doesn't exist in database
+		try:
+			if self._cursor.rowcount == -1:
+				raise KeywordError(f"{key} : {value} doesn't exist in database !")
+
+		except KeywordError as err:
+			print(err)
+
+		else:
+
+			# Getting the result of the query
+			result = self._cursor.fetchone()
+
+			# Filling attributes object with result
+			for i, c in enumerate(tuple(columns.split(", "))):
+				setattr(object_to_read, c, result[i])
 
 
 
-	def _select_table(self, object_to_read):
+	def _select_table(self, class_ref):
 		"""Private method for getting an entire table from the database
 
 		Args:
 
-			object_to_read (model object): Model object used to select table to
-			read
+			class_ref (class reference): Model class reference representing
+				table in database from which we want data
 
 		"""
 
-		columns = self._get_columns(object_to_read)
+		table = class_ref().TABLE_NAME
+		columns = self._get_columns(class_ref())
 
-		self._cursor.execute(f"SELECT ({columns}) FROM {table}")
+		self._cursor.execute(f"SELECT {columns} FROM {table}")
 
 		list_of_objects = list()
 
 		for values in self._cursor.fetchall():
 
-			for i, c in enumerate(columns):
-				object_to_read.c = values[i]
+			tmp_object = class_ref()
 
-			list_of_objects.append(object_to_read)
+			for i, c in enumerate(tuple(columns.split(", "))):
+
+				setattr(tmp_object, c, values[i])
+
+			list_of_objects.append(tmp_object)
 
 
 		return list_of_objects
@@ -286,6 +330,8 @@ class Manager:
 			the liaison table with the object_linked
 
 		"""
+
+		print(object_linked.name, len(liaison_data))
 
 		table = object_linked.TABLE_NAME + '_' + liaison_data[0].TABLE_NAME
 		columns = f"{object_linked.TABLE_NAME + '_id' + ', ' + liaison_data[0].TABLE_NAME + '_id'}"
@@ -352,7 +398,8 @@ class Manager:
 
 		Args:
 
-			object_to_inspect (model object): Model object to inspect
+			object_to_inspect: Model object from which we want attributes 
+				who represente columns in database
 
 		Returns:
 
@@ -365,10 +412,13 @@ class Manager:
 
 		for i, attr in enumerate(all_attr):
 
-			# If current attr not a many to many relation
-			if not isinstance(all_attr[attr], list):
+			if i < object_to_inspect.COLUMNS:
 
 				columns.append(attr)
+
+			else:
+
+				break
 
 
 		return ", ".join(columns)
@@ -424,3 +474,24 @@ class Manager:
 		self._cursor.execute("SELECT LAST_INSERT_ID()")
 
 		return self._cursor.fetchall()[0][0]
+
+
+
+	def _get_where_clause(self, **kwargs):
+		"""Take a keyword argument and return a pair of key/values as strings
+
+		Args:
+
+			kwargs (dict): Keyword argument
+
+		Return:
+
+			key (str): Key as string
+			value (str): Value as string
+
+		"""
+
+		key = next((f"{i}" for i in kwargs.keys()))
+		value = f"{kwargs[key]}"
+
+		return key, value

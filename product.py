@@ -7,6 +7,7 @@ class Product(Model):
 	"""
 
 	TABLE_NAME = "product"
+	COLUMNS = 7
 
 	def __init__(self, **kwargs):
 		"""init method

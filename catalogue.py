@@ -12,8 +12,11 @@ from configuration import (URL,
 from product import Product
 from category import Category
 from model import Model
-import time
+from re import compile as re_compile
+from re import sub
+from re import match
 import pdb
+
 
 
 class Catalogue:
@@ -34,6 +37,17 @@ class Catalogue:
 		"""
 
 		self._catalogue = list() # Empty catalogue of products
+
+		# Regular expression for getting rid of categories looking like en:...
+		# or fr:...
+		self._re_header = re_compile(r'^en:+|^fr:+')
+
+		# Regulard expression for getting rid of spaces at beginning of a 
+		# category string
+		self._re_spaces = re_compile(r'^ *')
+
+		# Regulard expression for getting rid of dashes
+		self._re_dash = re_compile(r'-')
 
 
 
@@ -78,15 +92,36 @@ class Catalogue:
 				product_obj = Product(**{KEYWORDS[key]:value for key, value in product.items()})
 
 				# For every word in the json key 'categories'
-				for c in product['categories'].split(', '):
+				for c in product['categories'].split(','):
 
-					# Turn it to a Category object
-					category_obj = Category(name=c)
+					# Getting rid of spaces
+					c = sub(self._re_spaces, '', c)
 
-					# Append it to the Product object which he belong to
-					product_obj.belong_to.append(category_obj)
+					# Getting rid of dashes, putting spaces instead
+					c = sub(self._re_dash, ' ', c)
 
-				self._catalogue.append(product_obj)
+					# If c look like en:/fr: or don't have more then 2 caracters
+					if match(self._re_header, c) or len(c) <= 2:
+
+						# We don't register it
+						continue
+
+					else:
+
+						c.lower()
+						c.capitalize()
+
+						# Turn it to a Category object
+						category_obj = Category(name=c)
+
+						# Append it to the Product object which he belong to
+						product_obj.belong_to.append(category_obj)
+
+				# If current product belong at least to one category
+				if len(product_obj.belong_to) > 0:
+					
+					# Keeping it
+					self._catalogue.append(product_obj)
 
 
 

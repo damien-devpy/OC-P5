@@ -7,6 +7,7 @@ class Category(Model):
 	"""
 
 	TABLE_NAME = "category"
+	COLUMNS = 2
 
 	def __init__(self, **kwargs):
 		"""init method
@@ -24,3 +25,7 @@ class Category(Model):
 
 		self.id = kwargs.get('id')
 		self.name = kwargs.get('name')
+
+		# Set this attribute is there is a risk for registering twice the same
+		# information in database
+		self.duplicate_key = True

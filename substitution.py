@@ -7,6 +7,7 @@ class Substitution(Model):
 	"""
 
 	TABLE_NAME = "substitution"
+	COLUMNS = 3
 
 	def __init__(self, **kwargs):
 		"""init method
