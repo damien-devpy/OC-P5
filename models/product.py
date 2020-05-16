@@ -1,7 +1,7 @@
 # coding: utf-8
 
-from model import Model
-from manager import Manager
+from models.model import Model
+from orm.manager import Manager
 
 class Product(Model):
 	"""Model class of the product table in database

@@ -9,9 +9,9 @@ from configuration import (URL,
 						   PAGE_SIZE,
 						  )
 
-from product import Product
-from category import Category
-from model import Model
+from models.product import Product
+from models.category import Category
+from models.model import Model
 from re import compile as re_compile
 from re import sub
 from re import match
