@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from models.model import Model
+from model import Model
 
 class Substitution(Model):
 	"""Model class of substitution table in database

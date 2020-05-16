@@ -4,7 +4,7 @@ from mysql import connector
 from configuration import (DATABASE,
 						   DATABASE_NAME,
 						  )
-from models.keyworderror import KeywordError
+from keyworderror import KeywordError
 import pdb
 
 class Manager:

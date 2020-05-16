@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from orm.manager import Manager
+from manager import Manager
 import pdb
 
 

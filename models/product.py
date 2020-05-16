@@ -1,7 +1,7 @@
 # coding: utf-8
 
-from models.model import Model
-from orm.manager import Manager
+from model import Model
+from manager import Manager
 
 class Product(Model):
 	"""Model class of the product table in database
@@ -45,7 +45,7 @@ class Product(Model):
 		Args:
 
 			choosen_category (str): Category choosed by user, for a product substitution
-	
+
 		"""
 
 		manager = Manager()
