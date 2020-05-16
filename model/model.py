@@ -32,4 +32,4 @@ class Model:
 
 	def __iter__(self):
 
-		return iter(self.__dict__.values())
+		return iter(self.__dict__.values())	

@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from models.model import Model
+from model.model import Model
 from orm.manager import Manager
 
 class Product(Model):

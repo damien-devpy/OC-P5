@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from models.model import Model
+from model.model import Model
 
 class Category(Model):
 	"""Model class of the category table in database

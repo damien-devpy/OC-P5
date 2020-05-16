@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from models.model import Model
+from model.model import Model
 
 class Substitution(Model):
 	"""Model class of substitution table in database
@@ -23,6 +23,6 @@ class Substitution(Model):
 
 		"""
 
-		self.id = kwargs.get['id']
+		self.id = kwargs.get('id')
 		self.barre_code_to_substitute = kwargs.get('barre_code_to_substitute')
 		self.barre_code_substitute = kwargs.get('barre_code_substitute')

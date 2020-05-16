@@ -4,7 +4,7 @@ from mysql import connector
 from configuration import (DATABASE,
 						   DATABASE_NAME,
 						  )
-from models.keyworderror import KeywordError
+from model.keyworderror import KeywordError
 import pdb
 
 class Manager:
@@ -13,7 +13,7 @@ class Manager:
 
 	def __init__(self):
 
-		self._cnx = connector.connect(user='root', host='localhost', password='admin')
+		self._cnx = connector.connect(user='user', host='localhost', password='user')
 		self._cursor = self._cnx.cursor()
 
 
