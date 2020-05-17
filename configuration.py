@@ -34,3 +34,6 @@ KEYWORDS = {'code': 'barre_code',
 			'quantity': 'quantity',
 			'categories': 'categories',
 	   	   }
+
+# Items to be shown to the user in the view part
+ITEMS_TO_SHOW = 10

@@ -31,5 +31,22 @@ class Model:
 
 
 	def __iter__(self):
+		"""Making model objects iterable
 
-		return iter(self.__dict__.values())	
+		Return:
+
+			iterator: An iterator that contain all attributes representing
+				columns in database
+
+		"""
+
+
+		# Return an iterator containing attributes of self that do
+		# represent a column in database
+		# (For instance, duplicate_key and belong_to attributes DO NOT 
+		# represent columns of a table)
+		return (value 
+				for i, value 
+				in enumerate(self.__dict__.values())
+			    if i < self.COLUMNS
+			   )

@@ -64,8 +64,6 @@ class Catalogue:
 
 				self._processing_data(response.json()['products'])
 
-				print(len(self._catalogue))
-
 
 
 	def _processing_data(self, raw_catalogue):

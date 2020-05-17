@@ -165,7 +165,7 @@ class Manager:
 
 		# Using query join, table name is needed with columns
 		# in order to not being ambiguous 
-		ending_table_columns = ", ".join(f"{ending_table}.{i}" for i in ending_columns.split(", "))
+		ending_table_columns = ", ".join(f"{ending_table}.{c}" for c in ending_columns.split(", "))
 
 		liaison_table_name = sorted([starting_table, ending_table])
 		liaison_table_name = liaison_table_name[1] + "_" + liaison_table_name[0]
@@ -200,18 +200,15 @@ class Manager:
 		"""Specifically in charge for looking a product substitution
 		"""
 
-		columns = tuple(self._get_columns(product_object).split(', '))
+		#pdb.set_trace()
+
+		columns = self._get_columns(product_object)
+		columns_with_table_name = ', '.join(f"{product_object.TABLE_NAME}.{c}" for c in columns.split(', '))
 
 		query = f"""
-			SELECT * FROM (
-				SELECT product.id,
-					   product.barre_code,
-					   product.name,
-					   product.nutrition_grade,
-					   product.brand,
-					   product.ingredients,
-					   product.quantity
-				FROM product
+			SELECT {columns} FROM (
+				SELECT {columns_with_table_name}
+				FROM {product_object.TABLE_NAME}
 				INNER JOIN product_category
 				ON product.id = product_category.product_id
 				INNER JOIN category
@@ -226,7 +223,9 @@ class Manager:
 
 		self._cursor.execute(query)
 
-		# pdb.set_trace()
+		# Making columns an iterable
+		columns = tuple(columns.split(', '))
+
 
 		# Getting first result of the query, i.e. product with better nutriscore
 		result = self._cursor.fetchmany(size=1)[0]
