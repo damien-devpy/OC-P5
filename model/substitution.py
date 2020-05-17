@@ -6,7 +6,11 @@ class Substitution(Model):
 	"""Model class of substitution table in database
 	"""
 
+	# Table name in database this model class represent
 	TABLE_NAME = "substitution"
+
+	# How much columns this model class has as attributes
+	# in declaration order
 	COLUMNS = 3
 
 	def __init__(self, **kwargs):
@@ -24,5 +28,5 @@ class Substitution(Model):
 		"""
 
 		self.id = kwargs.get('id')
-		self.barre_code_to_substitute = kwargs.get('barre_code_to_substitute')
-		self.barre_code_substitute = kwargs.get('barre_code_substitute')
+		self.id_to_substitute = kwargs.get('id_to_substitute')
+		self.id_substitute = kwargs.get('id_substitute')

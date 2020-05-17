@@ -7,7 +7,11 @@ class Product(Model):
 	"""Model class of the product table in database
 	"""
 
+	# Table name in database this model class represent
 	TABLE_NAME = "product"
+
+	# How much columns this model class has as attributes
+	# in declaration order
 	COLUMNS = 7
 
 	def __init__(self, **kwargs):
@@ -42,6 +46,7 @@ class Product(Model):
 	def get_substitute(self, choosen_category):
 		"""Looking for a product substitute, through the manager
 			and the substition method
+			
 		Args:
 
 			choosen_category (str): Category choosed by user, for a product substitution

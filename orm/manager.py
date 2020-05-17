@@ -17,7 +17,6 @@ class Manager:
 		self._cursor = self._cnx.cursor()
 
 
-
 	def create_db(self):
 		"""Creating the database from a sql file
 		"""
@@ -27,11 +26,32 @@ class Manager:
 				self._cursor.execute(line)
 
 
-
 	def set_db(self):
 
 		self._cursor.execute(f"USE {DATABASE_NAME}")
 
+
+	def is_there_db(self):
+		"""Checking if database exist
+
+		Return:
+
+			bool: True if database exist, False otherwhise
+
+		"""
+
+		#pdb.set_trace()
+
+		self._cursor.execute(f"SHOW DATABASES LIKE '{DATABASE_NAME}'")
+		self._cursor.fetchall()
+
+		if self._cursor.rowcount == -1:
+
+			return False
+
+		else:
+
+			return True
 
 
 	def insert_all(self, list_of_objects):
@@ -72,7 +92,6 @@ class Manager:
 				insert(an_object)
 
 
-
 	def insert(self, object_to_insert):
 		"""In charge of C part of CRUD (create), for inserting data in DB
 
@@ -107,7 +126,6 @@ class Manager:
 		self._cnx.commit()
 
 
-
 	def select(self, an_object, column=None, **kwargs):
 		"""In charge of R part of CRUD (read), for selecting data in DB
 
@@ -140,7 +158,6 @@ class Manager:
 		else:
 
 			return self._select_table(an_object)
-
 
 
 	def select_through_join(self,
@@ -195,7 +212,6 @@ class Manager:
 		return tmp_list
 
 
-
 	def substitution(self, product_object, category_choosed):
 		"""Specifically in charge for looking a product substitution
 		"""
@@ -235,11 +251,7 @@ class Manager:
 			setattr(product_object, columns[i], value)
 
 
-		
-
-
 ############################## PRIVATE METHODS ##############################
-
 
 
 	def _select_column(self, class_ref, column):
@@ -258,10 +270,17 @@ class Manager:
 
 		self._cursor.execute(f"SELECT {column} FROM {table}")
 
-		return (class_ref(name=value[0])
-		        for value in self._cursor.fetchall()
-			   )
+		tmp_list = list()
 
+		for value in self._cursor.fetchall():
+
+			tmp_object = class_ref()
+
+			setattr(tmp_object, column, value[0])
+
+			tmp_list.append(tmp_object)
+
+		return tmp_list
 
 
 	def _select_row(self, object_to_read, **kwargs):
@@ -302,8 +321,6 @@ class Manager:
 			print(err)
 
 		else:
-
-
 
 			# Filling attributes object with result
 			for i, c in enumerate(tuple(columns.split(", "))):

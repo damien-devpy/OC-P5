@@ -6,7 +6,11 @@ class Category(Model):
 	"""Model class of the category table in database
 	"""
 
+	# Table name in database this model class represent
 	TABLE_NAME = "category"
+	
+	# How much columns this model class has as attributes
+	# in declaration order
 	COLUMNS = 2
 
 	def __init__(self, **kwargs):
