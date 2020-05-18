@@ -30,6 +30,6 @@ class Category(Model):
 		self.id = kwargs.get('id')
 		self.name = kwargs.get('name')
 
-		# Set this attribute is there is a risk for registering twice the same
-		# information in database
+		Model.__init__(self)
 		self.duplicate_key = True
+		self.liaison_table = "product"

@@ -8,6 +8,23 @@ class Model:
 	"""Model class representing table database
 	"""
 
+	def __init__(self):
+
+		# Set this attribute True if there is a risk for registering twice the same
+		# information in database but you don't want to ignore it
+		self.duplicate_key = False
+
+		# Set this attribute True for database to ignore a row if an information
+		# match a unique key already registered
+		self.ignore = False
+
+		# Filling it for representing a many to many relation
+		self.belong_to = list()
+
+		# Filling it with name of the table which there is a many to many
+		# relation
+		self.liaison_table = None
+
 	def save(self):
 		"""Used for insert data through the manager
 		"""
@@ -39,7 +56,6 @@ class Model:
 				columns in database
 
 		"""
-
 
 		# Return an iterator containing attributes of self that do
 		# represent a column in database

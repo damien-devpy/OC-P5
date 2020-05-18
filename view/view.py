@@ -1,44 +1,74 @@
 # coding: utf-8
 
 from configuration import ITEMS_TO_SHOW
+from model.product import Product
 import pdb
 
 class View:
 	"""In charge of the view part of the app"""
 
 	def __init__(self):
-		pass
+		
+		self.page = None
 
 
 	def main_menu(self):
 		"""Main menu of the app"""
 
-		print("Menu principal:")
-		print("1. Choissisez un aliment à substituer")
-		print("2. Retrouvez vos précédentes substitutions")
+		print()
+		print("Main menu:")
+		print("1. Pick up a product and find a substitute")
+		print("2. Get back your old substitutions")
+		print()
+		print("How to use this app:")
+		print()
+		print("Making a choice: the number near your choice + Enter")
+		print("Going back to the main menu anytime you want: 'back' + Enter")
 		print()
 
 
-	def sub_menu(self, list_of_items, page):
+	def sub_menu(self, list_of_items):
 		"""In charge of getting information to print considering
 			page asked
 
 		Args:
 
-			list_of_items (list): List of items to print, considering
-				page asked
-
-			page (int): Page to show
+			list_of_items (list): List of items to print
 
 		"""
 
-		items_to_show = self.paging(list_of_items, page)
+		items_to_show = self.paging(list_of_items)
 
 		for i, item in enumerate(items_to_show):
 
-			print(f"{i+1} - {item.name}")
+			print(f"{i+1}. {item.name} ({item.id})")
 
 		print()
+
+
+	def sub_menu_substitution(self, list_of_items):
+		"""In charge of printing old substitutions
+
+			list_of_items (list): List of items to print
+
+		"""
+
+		print()
+
+		items_to_show = self.paging(list_of_items)
+
+		for i, item in enumerate(items_to_show):
+
+			old_product = Product()
+			old_product.get(id=item.id_to_substitute)
+			new_product = Product()
+			new_product.get(id=item.id_substitute)
+
+			print(f"{i+1} - {old_product.name, old_product.nutrition_grade}",
+				  end=''
+				 )
+			print(f" -> {new_product.name, new_product.nutrition_grade}")
+			print()
 
 
 	def details_menu(self, item_to_detail):
@@ -62,13 +92,12 @@ class View:
 		print()
 
 
-	def paging(self, list_of_items, page_asked):
+	def paging(self, list_of_items):
 		"""Paginate a iterable regarding a specific asked page
 
 		Args:
 
 			list_of_items (list): A list of objects to paginate
-			page_asked (int): Which page of the iterable will be return
 
 		Return:
 
@@ -78,31 +107,29 @@ class View:
 
 		total_pages = self._get_total_pages(list_of_items)
 
-		if any((page_asked < 1, page_asked > total_pages)):
+		if not 1 <= self.page <= total_pages:
 
-			page_asked = self._fix_page_asked(list_of_items,
-											  page_asked,
-											  total_pages,
-											 )
+			self._fix_page_asked(list_of_items,
+								 total_pages,
+								)
 
 		# Return items that match page asked
-		if page_asked == 1:
+		if self.page == 1:
 			return list_of_items[0:ITEMS_TO_SHOW]
 
 		else:
-			start, end = self._get_slices(list_of_items, page_asked)
+			start, end = self._get_slices(list_of_items)
 
 			return list_of_items[start:end]
 
 
-	def get_object_with_paging(self, list_of_items, page_asked, choice):
+	def get_object_with_paging(self, list_of_items, choice):
 		"""Return an object in list_of_items based on a choice made from
 			a list_of_items paged
 
 		Args:
 
 			list_of_items (list): A list of objects
-			page_asked (int): At which page the user made is choice
 			choice (int): Which item choosed in the page_asked
 
 		Return:
@@ -111,27 +138,32 @@ class View:
 
 		"""
 
+		pdb.set_trace()
+
 		# Element are displaying with an increment of 1
 		choice -= 1
 
-		if choice < 0:
-			choice = 0
-
-		elif choice > ITEMS_TO_SHOW:
-			choice = ITEMS_TO_SHOW
-
 		total_pages = self._get_total_pages(list_of_items)
 
-		if any((page_asked < 1, page_asked > total_pages)):
+		if not 1 <= self.page <= total_pages:
 
-			page_asked = self._fix_page_asked(list_of_items,
-											  page_asked,
-											  total_pages,
-											 )
+			self._fix_page_asked(list_of_items,
+							     total_pages,
+								)
 
 
-		start, end = self._get_slices(list_of_items, page_asked)
+		start, end = self._get_slices(list_of_items)
 		list_paged = list_of_items[start:end]
+
+		# If user choice doesn't match proposal
+		if choice < start:
+
+			choice = start
+
+		elif choice >= end:
+
+			# End slice exlude, so we need to substracte one
+			choice = end - 1
 
 		return list_paged[choice]
 
@@ -142,20 +174,6 @@ class View:
 		print("Please make a correct input")
 		print()
 
-
-	def make_substitution(self):
-		"""Ask the user if he want to substitute current product"""
-
-		print("Do you want to find a substitute for this product ?", end =' ')
-		print("(y for yes, any other input for main menu)")
-		print()
-
-	def record_substitition(self):
-		"""Ask the user if he want to record the substitution in database"""
-
-		print("Do you want to save your substitution ?")
-		print("Use 'y' for yes, any other input to get back to the main menu")
-		print()
 
 ############################## PRIVATE METHODS ##############################
 
@@ -187,7 +205,7 @@ class View:
 
 		return total_pages
 
-	def _fix_page_asked(self, list_of_items, page_asked, total_pages):
+	def _fix_page_asked(self, list_of_items, total_pages):
 		"""Set how much pages are contains in list_of_items regarding
 			ITEMS_TO_SHOW
 		   	Fixing page_asked if the user made a wrong input
@@ -195,35 +213,27 @@ class View:
 		Args:
 
 			list_of_items (list): A list of objects to paginate
-			page_asked (int): Which page of the iterable will be return
-
-		Return:
-
-			page_asked (int): page_asked fixed if needed
 
 		"""
 
 		# Prevent user incorrect input
-		if page_asked < 1:
+		if self.page < 1:
 
 			# Setting to first one if negative
-			page_asked = 1
+			self.page = 1
 
-		elif page_asked > total_pages:
+		elif self.page > total_pages:
 
 			# Setting to last one if greater than total pages
-			page_asked = total_pages
-
-		return page_asked
+			self.page = total_pages
 
 
-	def _get_slices(self, list_of_items, page_asked):
+	def _get_slices(self, list_of_items):
 		"""Determine slices regarding the page asked
 
 		Args:
 
 			list_of_items (list): A list of objects to paginate
-			page_asked (int): Which page of the iterable will be return
 
 		Return:
 
@@ -232,14 +242,13 @@ class View:
 
 		"""
 
-		# If ITEMS_TO_SHOW = 10 
-		# And the fith page of a 42 list items is asked
-		# Return (page_asked - 1) x ITEMS_TO_SHOW, which his 40 to 42 items
-		prev_page = (page_asked - 1) if (page_asked > 1) else 1
+		# Page start slice is (page - 1) * ITEMS_TO_SHOW
+		start = ITEMS_TO_SHOW * (self.page - 1)
 
-		start = ITEMS_TO_SHOW * prev_page if prev_page != 1 else 0
-		end = ((page_asked * ITEMS_TO_SHOW) 
-			   if ((page_asked * ITEMS_TO_SHOW) < len(list_of_items)) 
+		# Page end slice is page * ITEMS_TO_SHOW if page is not the last one
+		end = ((self.page * ITEMS_TO_SHOW) 
+			   if ((self.page * ITEMS_TO_SHOW) < len(list_of_items))
+			   # Else end page slice is end of list
 			   else len(list_of_items)
 			  )
 

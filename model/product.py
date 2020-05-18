@@ -40,7 +40,8 @@ class Product(Model):
 		self.ingredients = kwargs.get('ingredients')
 		self.quantity = kwargs.get('quantity')
 
-		self.belong_to = list()
+		Model.__init__(self)
+		self.liaison_table = "category"
 
 
 	def get_substitute(self, choosen_category):

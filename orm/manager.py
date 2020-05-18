@@ -40,18 +40,17 @@ class Manager:
 
 		"""
 
-		#pdb.set_trace()
-
 		self._cursor.execute(f"SHOW DATABASES LIKE '{DATABASE_NAME}'")
 		self._cursor.fetchall()
 
-		if self._cursor.rowcount == -1:
+		# If self._cursor contain a result, database exist, return True
+		if self._cursor.rowcount:
 
-			return False
+			return True
 
 		else:
 
-			return True
+			return False
 
 
 	def insert_all(self, list_of_objects):
@@ -106,19 +105,22 @@ class Manager:
 		values = self._get_values(object_to_insert, tuple(columns.split(', ')))
 		replacement = self._get_placeholders(len(values))
 
-		# If the object to insert contain a duplicate key, meaning there is
-		# a risk for registering twice the same information
-		if 'duplicate_key' in object_to_insert.__dict__:
+		# If there is a duplicate key
+		if object_to_insert.__dict__['duplicate_key']:
 
 			duplicate_key = "ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id)"
 			query = f"INSERT INTO {table} ({columns}) VALUES ({replacement}) {duplicate_key}"
+
+		# Elif there is a ignore attribute
+		elif object_to_insert.__dict__['ignore']:
+
+			query = f"INSERT IGNORE INTO {table} ({columns}) VALUES ({replacement})"
 
 		else:
 
 			query = f"INSERT INTO {table} ({columns}) VALUES ({replacement})"
 
 		self._cursor.execute(query, values)
-
 
 		fresh_id = self._get_back_id()
 		setattr(object_to_insert, 'id', fresh_id)
@@ -214,9 +216,16 @@ class Manager:
 
 	def substitution(self, product_object, category_choosed):
 		"""Specifically in charge for looking a product substitution
-		"""
+			Substitute occur IN PLACE
 
-		#pdb.set_trace()
+		Args:
+
+			product_object (model object): Product choosed by user for looking
+				to a substitute
+			category_choosed (model object): Category choosed by user for
+				looking for a product to substitute
+
+		"""
 
 		columns = self._get_columns(product_object)
 		columns_with_table_name = ', '.join(f"{product_object.TABLE_NAME}.{c}" for c in columns.split(', '))
@@ -231,7 +240,7 @@ class Manager:
 				ON product_category.category_id = category.id
 				INNER JOIN category as category_2
 				ON category.name = category_2.name
-				WHERE category_2.name = "{category_choosed}") as products 
+				WHERE category_2.name = "{category_choosed.name}") as products 
 			WHERE products.nutrition_grade < "{product_object.nutrition_grade}"
 			ORDER BY products.nutrition_grade
 
@@ -294,7 +303,6 @@ class Manager:
 			kwargs (dict): Keyword argument for a specific row
 
 		"""
-		#pdb.set_trace()
 
 		table = object_to_read.TABLE_NAME
 		columns = self._get_columns(object_to_read)
