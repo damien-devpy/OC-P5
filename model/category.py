@@ -1,6 +1,7 @@
 # coding: utf-8
 
 from model.model import Model
+import model.product
 
 class Category(Model):
 	"""Model class of the category table in database
@@ -32,4 +33,4 @@ class Category(Model):
 
 		Model.__init__(self)
 		self.duplicate_key = True
-		self.liaison_table = "product"
+		self.liaison_table = model.product.Product

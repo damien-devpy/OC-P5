@@ -13,7 +13,7 @@ class Manager:
 
 	def __init__(self):
 
-		self._cnx = connector.connect(user='user', host='localhost', password='user')
+		self._cnx = connector.connect(user='root', host='localhost', password='admin')
 		self._cursor = self._cnx.cursor()
 
 
@@ -146,6 +146,8 @@ class Manager:
 
 		"""
 
+		self._cursor.execute("START TRANSACTION")
+
 		# If a specific column is asked
 		if column:
 
@@ -161,9 +163,10 @@ class Manager:
 
 			return self._select_table(an_object)
 
+		self._cnx.commit()
+
 
 	def select_through_join(self,
-							class_ref_ending,
 							class_ref_starting,
 							**kwargs,
 							):
@@ -176,11 +179,11 @@ class Manager:
 		
 		key, value = self._get_where_clause(**kwargs)
 
-		ending_table = class_ref_ending.TABLE_NAME
+		ending_table = class_ref_starting().liaison_table().TABLE_NAME
 
 		# Getting columns of the ending table, represent by attributes of the 
 		# class reference
-		ending_columns = self._get_columns(class_ref_ending())
+		ending_columns = self._get_columns(class_ref_starting().liaison_table())
 
 		# Using query join, table name is needed with columns
 		# in order to not being ambiguous 
@@ -202,7 +205,7 @@ class Manager:
 
 		for value in self._cursor.fetchall():
 			
-			tmp_object = class_ref_ending()
+			tmp_object = class_ref_starting().liaison_table()
 
 			for i, c in enumerate(tuple(ending_columns.split(', '))):
 
@@ -251,13 +254,15 @@ class Manager:
 		# Making columns an iterable
 		columns = tuple(columns.split(', '))
 
-
 		# Getting first result of the query, i.e. product with better nutriscore
-		result = self._cursor.fetchmany(size=1)[0]
+		result = self._cursor.fetchmany(size=1)
 
-		for i, value in enumerate(result):
+		# If a better product has been found
+		if result:
 
-			setattr(product_object, columns[i], value)
+			for i, value in enumerate(result[0]):
+
+				setattr(product_object, columns[i], value)
 
 
 ############################## PRIVATE METHODS ##############################

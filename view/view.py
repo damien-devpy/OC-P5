@@ -138,8 +138,6 @@ class View:
 
 		"""
 
-		pdb.set_trace()
-
 		# Element are displaying with an increment of 1
 		choice -= 1
 
@@ -156,14 +154,14 @@ class View:
 		list_paged = list_of_items[start:end]
 
 		# If user choice doesn't match proposal
-		if choice < start:
+		if choice < 0:
 
 			choice = start
 
-		elif choice >= end:
+		elif choice >= ITEMS_TO_SHOW:
 
 			# End slice exlude, so we need to substracte one
-			choice = end - 1
+			choice = ITEMS_TO_SHOW - 1
 
 		return list_paged[choice]
 

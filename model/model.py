@@ -24,6 +24,7 @@ class Model:
 		# Filling it with name of the table which there is a many to many
 		# relation
 		self.liaison_table = None
+		
 
 	def save(self):
 		"""Used for insert data through the manager

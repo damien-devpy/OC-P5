@@ -115,8 +115,7 @@ class Controler():
 		self._vue.page = 1
 
 		# Getting list of products of the chosen category
-		products = self._manager.select_through_join(Product,
-											   		 Category,
+		products = self._manager.select_through_join(Category,
 											   		 name=category_choosed.name,
 											  		 )
 		# Displaying products in a sub menu
@@ -194,10 +193,10 @@ class Controler():
 		# get_substitute change product in place
 		product_choosed.get_substitute(category_choosed)
 
-		self._vue.details_menu(product_choosed)
-
 		# If a substitute has been found
-		if id_substitute != product_choosed:
+		if id_substitute != product_choosed.id:
+
+			self._vue.details_menu(product_choosed)
 
 			print("Do you want to save your substitution ?")
 			print("Use 'y' for yes, any other input to get back to the main menu")
@@ -220,8 +219,10 @@ class Controler():
 
 		else:
 
-			print("You already have the best produt !")
+			print("You already have the best product !")
 			print()
+
+			self.controler()
 
 
 

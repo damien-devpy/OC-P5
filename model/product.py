@@ -2,6 +2,7 @@
 
 from model.model import Model
 from orm.manager import Manager
+import model.category
 
 class Product(Model):
 	"""Model class of the product table in database
@@ -41,22 +42,22 @@ class Product(Model):
 		self.quantity = kwargs.get('quantity')
 
 		Model.__init__(self)
-		self.liaison_table = "category"
+		self.liaison_table = model.category.Category
 
 
-	def get_substitute(self, choosen_category):
+	def get_substitute(self, chosen_category):
 		"""Looking for a product substitute, through the manager
 			and the substition method
 			
 		Args:
 
-			choosen_category (str): Category choosed by user, for a product substitution
+			chosen_category (str): Category choosed by user, for a product substitution
 
 		"""
 
 		manager = Manager()
 		manager.set_db()
 
-		manager.substitution(self, choosen_category)
+		manager.substitution(self, chosen_category)
 
 
