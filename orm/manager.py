@@ -13,7 +13,7 @@ class Manager:
 
 	def __init__(self):
 
-		self._cnx = connector.connect(user='root', host='localhost', password='admin')
+		self._cnx = connector.connect(user='admin', host='localhost', password='admin')
 		self._cursor = self._cnx.cursor()
 
 

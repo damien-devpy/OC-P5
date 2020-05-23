@@ -1,6 +1,6 @@
 # coding: utf-8
 
-import configuration
+from configuration import ITEMS_TO_SHOW
 
 from model.model import Model
 from model.product import Product
@@ -27,8 +27,13 @@ class Controler():
 		self._manager = Manager()
 		self._vue = View()
 
+		self._page = None
+
 
 	def controler(self):
+		"""Ensure logic of the app, manage every part of the menu and
+			interaction between objects
+		"""
 
 		# If database doesn't exist
 		if not self._manager.is_there_db():
@@ -42,187 +47,328 @@ class Controler():
 			# Inserting data in database
 			self._manager.insert_all(self._catalogue.catalogue)
 
-
 		self._manager.set_db()
 
-		input_ok = False
-
-		# While an input as not occured, or an incorrect one
-		while not input_ok:
-
-			# Display main menu and ask user for a choice
-			self._vue.main_menu()
-
-			input_user = input()
-
-			try:
-				input_user = int(input_user)
-				input_ok = True
-
-			except:
-				self._vue.make_correct_input()
+		self._vue.help_menu()
+		self._main_menu()
 
 
-		if input_user == 1:
+	def _main_menu(self):
 
-			# User can choose among many categories
-			category_choosed = self._categories_menu()
+		self._vue.main_menu()
 
-			# User choose a product belonging to the category choosed
-			product_choosed = self._products_menu(category_choosed)
+		input_user = input().lower()
 
-			# Displaying all details about the product
-			self._vue.details_menu(product_choosed)
+		if input_user == '1':
 
-			print("Do you want to find a substitute for this product ?", end =' ')
-			print("(y for yes)")
-			print()
+			self._categories_menu()
 
-			if input().lower() == 'y':
+		elif input_user == '2':
 
-				self._find_substitute(product_choosed, category_choosed)
+			self._substitution_menu()
 
-			else:
-				# Get back to the main menu
-				self.controler()
+		elif input_user == 'exit':
 
-
-		elif input_user == 2:
-			
-			sub_choosed = self._substitution_menu()
+			exit()
 
 		else:
-			exit()
+
+			self._vue.make_correct_input()
+
+			self._main_menu()
 
 
 	def _categories_menu(self):
 
-		self._vue.page = 1
+		self._page = 1
 
 		# Getting list of categories from the database
 		categories = self._manager.select(Category)
 
 		# Displaying categories in a sub menu
-		self._vue.sub_menu(categories)
+		categories_to_show = self._paging(categories)
+		self._vue.sub_menu(categories_to_show)
 
-		category_choosed = self._navigation(categories)
+		category_choosed = self._navigation(categories, self._categories_menu)
 
-		return category_choosed
+		self._products_menu(category_choosed)
+
 
 
 	def _products_menu(self, category_choosed):
 
-		self._vue.page = 1
+		pdb.set_trace()
 
-		# Getting list of products of the chosen category
-		products = self._manager.select_through_join(Category,
-											   		 name=category_choosed.name,
-											  		 )
+		self._page = 1
+
+		# Getting list of products from the catagory choosed
+		products = self._manager.select_through_join(Category, name=category_choosed.name)
+
 		# Displaying products in a sub menu
-		self._vue.sub_menu(products)
+		products_to_show = self._paging(products)
+		self._vue.sub_menu(products_to_show)
 
-		product_choosed = self._navigation(products)
+		product_choosed = self._navigation(products, self._products_menu)
 
-		return product_choosed
-
-
-	def _substitution_menu(self):
-
-		self._vue.page = 1
-
-		# Getting list of substitutions from the database
-		substitutions = self._manager.select(Substitution)
-
-		# Displaying categories in a sub menu
-		self._vue.sub_menu_substitution(substitutions)
-
-		sub_choosed = self._navigation(substitutions)
-
-		return sub_choosed
-
-
-	def _navigation(self, items):
-
-		input_ok = False
-
-		# While an input as not occured, or an incorrect one
-		while not input_ok:
-
-			input_user = input()
-
-			# If user want to go back to the main menu
-			if input_user == "back":
-
-				self.controler()	
-
-			# If user want to display another page
-			elif any((input_user == "<", input_user == ">")):
-
-				if input_user == "<":
-					# Display previous page
-					self._vue.page -= 1
-					self._vue.sub_menu(items)
-
-				else:
-					# Display next page
-					self._vue.page += 1
-					self._vue.sub_menu(items)
-
-			else:
-
-				try:
-					input_user = int(input_user)
-					input_ok = True
-
-				except:
-					self._vue.make_correct_input()
-
-				else:
-					item_choosed = self._vue.get_object_with_paging(items,
-												              		input_user,
-											   			     	   )
-		return item_choosed
+		self._vue.details_menu(product_choosed)
+		self._find_substitute(product_choosed, category_choosed)
 
 
 	def _find_substitute(self, product_choosed, category_choosed):
 
 		# Keeping id of the product to substitute
-		id_substitute = product_choosed.id
-		
-		# Looking for a substitute of the chosen product
-		# get_substitute change product in place
-		product_choosed.get_substitute(category_choosed)
+		id_old_product = product_choosed.id
+
+		# Looking for a product substitute
+		product_choosed.get_substitute(category_choosed.name)
 
 		# If a substitute has been found
-		if id_substitute != product_choosed.id:
+		if id_old_product != product_choosed.id:
 
 			self._vue.details_menu(product_choosed)
 
-			print("Do you want to save your substitution ?")
-			print("Use 'y' for yes, any other input to get back to the main menu")
-			print()
+			self._vue.save_substitute()
 
-			if input().lower() == 'y':
+			input_user = input().lower()
 
-				substitution = Substitution(id_to_substitute=id_substitute,
+			# If user want to save the substitution
+			if input_user == 'y':
+
+				substitution = Substitution(id_to_substitute=id_old_product,
 											id_substitute=product_choosed.id,
 										   )
-
 				substitution.save()
 
-				self.controler()
+			# Get back to the previous menu
+			elif input_user == 'back':
 
-			else:
+				self._products_menu(category_choosed)
 
-				# Get back to the main menu
-				self.controler()
+			# Get back to the main menu
+			elif input_user == 'main':
+
+				self._main_menu()
+
+			# Exit the app
+			elif input_user == 'exit':
+
+				exit()
 
 		else:
 
-			print("You already have the best product !")
-			print()
+			self._vue.better_product()
 
-			self.controler()
-
+			self._main_menu()
 
 
+	def _substitution_menu(self):
+
+		self._page = 1
+
+		substitutions = self._manager.select(Substitution)
+
+		substitutions_to_show = self._paging(substitutions)
+		self._vue.sub_menu(substitutions_to_show, sub=True)
+
+		sub_choosed = self._navigation(substitutions, _main_menu, sub=True)
+
+		old_product = Product()
+		old_product.get(id=sub_choosed.id_to_substitute)
+		new_product = Product()
+		new_product.get(id=sub_choosed.id_substitute)
+
+		self._vue.details_menu(old_product, new_product)
+
+
+	def _navigation(self, items, func_reference, sub=False):
+		"""Manage the navigation through categories and products menus
+
+		Args:
+
+			items (list): List of items displaying that user must to choose
+			func_reference (function reference): Allow going back to the previous menu
+			sub (bool): Default to False. If True, items
+				is a list of substitution objects
+
+		Return:
+
+			item_choosed (...): Item choosed by user
+
+		"""
+
+		input_user = input().lower()
+
+		# If user want to display another page
+		if any((input_user == "<", input_user == ">")):
+
+			if input_user == "<":
+				# Display previous page
+				self._page -= 1
+				items_to_show = self._paging(items)
+				self._vue.sub_menu(items_to_show, sub)
+				self._navigation(items, func_reference, sub)
+
+			else:
+				# Display next page
+				self._page += 1
+				items_to_show = self._paging(items)
+				self._vue.sub_menu(items_to_show, sub)
+				self._navigation(items, func_reference, sub)
+
+		# Get back to the previous menu
+		elif input_user == 'back':
+
+			func_reference()
+
+		# Get back to the main menu
+		elif input_user == 'main':
+
+			self._main_menu()
+
+		# Exit the app
+		elif input_user == 'exit':
+
+			exit()
+
+		else:
+
+			input_ok = False
+
+			while not input_ok:
+
+				try:
+
+					input_user = int(input_user)
+					input_ok = True
+
+				except:
+
+					self._vue.make_correct_input()
+					items_to_show = self._paging(items)
+					self._vue.sub_menu(items_to_show, sub)
+					self._navigation(items, func_reference, sub)
+
+				else:
+					# If input user match the proposal
+					if 1 <= input_user <= len(items):
+
+						items_to_show = self._paging(items)
+						return items_to_show[input_user-1]
+
+					else:
+
+						self._vue.make_correct_input()
+						items_to_show = self._paging(items)
+						self._vue.sub_menu(items_to_show, sub)
+						self._navigation(items, func_reference, sub)
+
+
+
+	def _paging(self, list_of_items):
+		"""Paginate a iterable regarding a specific asked page
+
+		Args:
+
+			list_of_items (list): A list of objects to paginate
+
+		Return:
+
+			list_of_items (list): Part of iterable matching the page asked
+
+		"""
+
+		total_pages = self._get_total_pages(list_of_items)
+
+		if not 1 <= self._page <= total_pages:
+
+			self._fix_page_asked(total_pages)
+
+		# Return items that match page asked
+		if self._page == 1:
+
+			return list_of_items[0:ITEMS_TO_SHOW]
+
+		else:
+
+			start, end = self._get_slices(list_of_items)
+
+			return list_of_items[start:end]
+
+
+	def _get_total_pages(self, list_of_items):
+		"""Return total pages that list_of_items can contains regarding
+			ITEMS_TO_SHOW
+
+		Args:
+
+			list_of_items (list): A list of objects to paginate
+
+		Return:
+
+			total_pages (int): Pages contains by list_of_items regarding
+				ITEMS_TO_SHOW
+
+		"""
+
+		# How much (ITEMS_TO_SHOW) is in list_of_items
+		how_much_to_show = len(list_of_items) // ITEMS_TO_SHOW
+
+		# Number of pages
+		# A list containing 42 items is a 5 pages list if ITEMS_TO_SHOW = 10
+		total_pages = (how_much_to_show + 1 
+					   if len(list_of_items) % ITEMS_TO_SHOW 
+					   else how_much_to_show
+					  )
+
+
+		return total_pages
+
+
+	def _fix_page_asked(self, total_pages):
+		"""Set how much pages are contains in list_of_items regarding
+			ITEMS_TO_SHOW
+		   	Fixing page_asked if the user made a wrong input
+
+		Args:
+
+			total_pages (int): How much pages are contains in list_of_items
+
+		"""
+
+		# Prevent user incorrect input
+		if self._page < 1:
+
+			# Setting to first one if negative
+			self._page = 1
+
+		elif self._page > total_pages:
+
+			# Setting to last one if greater than total pages
+			self._page = total_pages
+
+
+	def _get_slices(self, list_of_items):
+		"""Determine slices regarding the page asked
+
+		Args:
+
+			list_of_items (list): A list of objects to paginate
+
+		Return:
+
+			start (int): First slice
+			end (int): Second slice
+
+		"""
+
+		# Page start slice is (page - 1) * ITEMS_TO_SHOW
+		start = ITEMS_TO_SHOW * (self._page - 1)
+
+		# Page end slice is page * ITEMS_TO_SHOW if page is not the last one
+		end = ((self._page * ITEMS_TO_SHOW) 
+			   if ((self._page * ITEMS_TO_SHOW) < len(list_of_items))
+			   # Else end page slice is end of list
+			   else len(list_of_items)
+			  )
+
+		return start, end
