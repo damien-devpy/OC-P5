@@ -28,9 +28,10 @@ class Category(Model):
 
 		"""
 
+		Model.__init__(self)
+		self._duplicate_key = True
+		self._liaison_table = model.product.Product
+
 		self.id = kwargs.get('id')
 		self.name = kwargs.get('name')
 
-		Model.__init__(self)
-		self.duplicate_key = True
-		self.liaison_table = model.product.Product

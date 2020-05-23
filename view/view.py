@@ -11,46 +11,41 @@ class View:
 	def main_menu(self):
 		"""Main menu of the app"""
 
-		print()
-		print("Main menu:")
+		print("\nMain menu:")
 		print("1. Pick up a product and find a substitute")
-		print("2. Get back your old substitutions")
-		print()
+		print("2. Get back your old substitutions\n")
 
 
 	def help_menu(self):
 		"""Help menu of the app"""
 
-		print()
-		print("Help menu - How to use this app")
+		print("\nHelp menu - How to use this app")
 		print("- id near your choice + enter for choosing")
 		print("- 'main' for getting back to the main menu")
 		print("- 'back' for previous menu")
-		print("- 'exit' for exit :) ")
-		print()
+		print("- 'exit' for exit (: \n")
 
 
 	def save_substitute(self):
 
-		print()
-		print("Do you want to save this substitution ?", end=' ')
-		print("('y' for yes)")
-		print()
+		print("\nDo you want to save this substitution ?", end=' ')
+		print("('y' for yes)\n")
 
 
 	def better_product(self):
 
-		print()
-		print("You already have the safest product !")
-		print()
+		print("\nYou already have the safest product !\n")
 
 
 	def make_correct_input(self):
 		"""Tell the user to make a correct input"""
 
-		print("Please make a correct input")
-		print()
+		print("Please make a correct input\n")
 
+	def empty_menu(self):
+		"""Inform user there is nothing yet"""
+
+		print("\nNothing recorded yet !\n")
 
 	def sub_menu(self, list_of_items, sub=False):
 		"""In charge of getting information to print considering
@@ -63,6 +58,8 @@ class View:
 				is a list of substitution objects
 
 		"""
+
+		print()
 
 		if not sub:
 
@@ -93,10 +90,10 @@ class View:
 			new_product = Product()
 			new_product.get(id=item.id_substitute)
 
-			print(f"{i+1} - {old_product.name, old_product.nutrition_grade}",
+			print(f"{i+1} - {old_product.id, old_product.name, old_product.nutrition_grade, old_product.brand}",
 				  end=''
 				 )
-			print(f" -> {new_product.name, new_product.nutrition_grade}")
+			print(f" -> {old_product.id, new_product.name, new_product.nutrition_grade, old_product.brand}")
 			print()
 
 

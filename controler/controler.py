@@ -1,16 +1,13 @@
 # coding: utf-8
 
 from configuration import ITEMS_TO_SHOW
-
 from model.model import Model
 from model.product import Product
 from model.category import Category
 from model.substitution import Substitution
-from orm.manager import Manager
 from model.catalogue import Catalogue
+from orm.manager import Manager
 from view.view import View
-
-from copy import copy
 
 import pdb
 
@@ -89,26 +86,22 @@ class Controler():
 		categories_to_show = self._paging(categories)
 		self._vue.sub_menu(categories_to_show)
 
-		category_choosed = self._navigation(categories, self._categories_menu)
+		category_choosed = self._navigation(categories, self._main_menu)
 
 		self._products_menu(category_choosed)
 
-
-
 	def _products_menu(self, category_choosed):
-
-		pdb.set_trace()
 
 		self._page = 1
 
-		# Getting list of products from the catagory choosed
+		# Getting list of products from the category choosed
 		products = self._manager.select_through_join(Category, name=category_choosed.name)
 
 		# Displaying products in a sub menu
 		products_to_show = self._paging(products)
 		self._vue.sub_menu(products_to_show)
 
-		product_choosed = self._navigation(products, self._products_menu)
+		product_choosed = self._navigation(products, self._categories_menu)
 
 		self._vue.details_menu(product_choosed)
 		self._find_substitute(product_choosed, category_choosed)
@@ -139,6 +132,8 @@ class Controler():
 										   )
 				substitution.save()
 
+				self._main_menu()
+
 			# Get back to the previous menu
 			elif input_user == 'back':
 
@@ -167,17 +162,25 @@ class Controler():
 
 		substitutions = self._manager.select(Substitution)
 
-		substitutions_to_show = self._paging(substitutions)
-		self._vue.sub_menu(substitutions_to_show, sub=True)
+		# If there is some data in database:
+		if substitutions:
 
-		sub_choosed = self._navigation(substitutions, _main_menu, sub=True)
+			substitutions_to_show = self._paging(substitutions)
+			self._vue.sub_menu(substitutions_to_show, sub=True)
 
-		old_product = Product()
-		old_product.get(id=sub_choosed.id_to_substitute)
-		new_product = Product()
-		new_product.get(id=sub_choosed.id_substitute)
+			sub_choosed = self._navigation(substitutions, self._main_menu, sub=True)
 
-		self._vue.details_menu(old_product, new_product)
+			old_product = Product()
+			old_product.get(id=sub_choosed.id_to_substitute)
+			new_product = Product()
+			new_product.get(id=sub_choosed.id_substitute)
+
+			self._vue.details_menu(old_product, new_product)
+
+		else:
+
+			self._vue.empty_menu()
+			self._navigation(substitutions, self._main_menu, sub=True)
 
 
 	def _navigation(self, items, func_reference, sub=False):
@@ -206,14 +209,14 @@ class Controler():
 				self._page -= 1
 				items_to_show = self._paging(items)
 				self._vue.sub_menu(items_to_show, sub)
-				self._navigation(items, func_reference, sub)
+				return self._navigation(items, func_reference, sub)
 
 			else:
 				# Display next page
 				self._page += 1
 				items_to_show = self._paging(items)
 				self._vue.sub_menu(items_to_show, sub)
-				self._navigation(items, func_reference, sub)
+				return self._navigation(items, func_reference, sub)
 
 		# Get back to the previous menu
 		elif input_user == 'back':
@@ -232,6 +235,7 @@ class Controler():
 
 		else:
 
+			items_to_show = self._paging(items)
 			input_ok = False
 
 			while not input_ok:
@@ -244,23 +248,20 @@ class Controler():
 				except:
 
 					self._vue.make_correct_input()
-					items_to_show = self._paging(items)
 					self._vue.sub_menu(items_to_show, sub)
-					self._navigation(items, func_reference, sub)
+					return self._navigation(items, func_reference, sub)
 
-				else:
-					# If input user match the proposal
-					if 1 <= input_user <= len(items):
+			# If input user match proposals
+			if 1 <= input_user <= len(items_to_show):
 
-						items_to_show = self._paging(items)
-						return items_to_show[input_user-1]
+				# Return item asked minus 1, id are shown from 1 to 10
+				return items_to_show[input_user-1]
 
-					else:
+			else:
 
-						self._vue.make_correct_input()
-						items_to_show = self._paging(items)
-						self._vue.sub_menu(items_to_show, sub)
-						self._navigation(items, func_reference, sub)
+				self._vue.make_correct_input()
+				self._vue.sub_menu(items_to_show, sub)
+				return self._navigation(items, func_reference, sub)
 
 
 

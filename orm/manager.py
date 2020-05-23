@@ -3,6 +3,7 @@
 from mysql import connector
 from configuration import (DATABASE,
 						   DATABASE_NAME,
+						   CREDENTIALS,
 						  )
 from model.keyworderror import KeywordError
 import pdb
@@ -13,7 +14,7 @@ class Manager:
 
 	def __init__(self):
 
-		self._cnx = connector.connect(user='admin', host='localhost', password='admin')
+		self._cnx = connector.connect(**CREDENTIALS)
 		self._cursor = self._cnx.cursor()
 
 
@@ -71,14 +72,14 @@ class Manager:
 			for an_object in list_of_objects:
 
 				# Filling table with the current object
-				self.insert(an_object)
+				self._insert(an_object)
 
 				data_liaison_table = self._get_liaison_data(an_object)
 				
 				# Filling table for every objects in data_liaison_table
 				for liaison_object in data_liaison_table:
 					
-					self.insert(liaison_object)
+					self._insert(liaison_object)
 
 				# After inserting every objects in their proper tables
 				# Filling the liaison table
@@ -88,10 +89,12 @@ class Manager:
 
 			for an_object in list_of_objects:
 
-				insert(an_object)
+				self._insert(an_object)
+
+		self._cnx.commit()
 
 
-	def insert(self, object_to_insert):
+	def insert_one_at_a_time(self, object_to_insert):
 		"""In charge of C part of CRUD (create), for inserting data in DB
 
 		Args:
@@ -100,30 +103,7 @@ class Manager:
 
 		"""
 
-		table = object_to_insert.TABLE_NAME
-		columns = self._get_columns(object_to_insert)
-		values = self._get_values(object_to_insert, tuple(columns.split(', ')))
-		replacement = self._get_placeholders(len(values))
-
-		# If there is a duplicate key
-		if object_to_insert.__dict__['duplicate_key']:
-
-			duplicate_key = "ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id)"
-			query = f"INSERT INTO {table} ({columns}) VALUES ({replacement}) {duplicate_key}"
-
-		# Elif there is a ignore attribute
-		elif object_to_insert.__dict__['ignore']:
-
-			query = f"INSERT IGNORE INTO {table} ({columns}) VALUES ({replacement})"
-
-		else:
-
-			query = f"INSERT INTO {table} ({columns}) VALUES ({replacement})"
-
-		self._cursor.execute(query, values)
-
-		fresh_id = self._get_back_id()
-		setattr(object_to_insert, 'id', fresh_id)
+		self._insert(object_to_insert)
 
 		self._cnx.commit()
 
@@ -217,7 +197,7 @@ class Manager:
 		return tmp_list
 
 
-	def substitution(self, product_object, category_choosed):
+	def substitution(self, product_object, chosen_category):
 		"""Specifically in charge for looking a product substitution
 			Substitute occur IN PLACE
 
@@ -225,7 +205,7 @@ class Manager:
 
 			product_object (model object): Product choosed by user for looking
 				to a substitute
-			category_choosed (model object): Category choosed by user for
+			chosen_category (str): Category choosed by user for
 				looking for a product to substitute
 
 		"""
@@ -243,7 +223,7 @@ class Manager:
 				ON product_category.category_id = category.id
 				INNER JOIN category as category_2
 				ON category.name = category_2.name
-				WHERE category_2.name = "{category_choosed.name}") as products 
+				WHERE category_2.name = "{chosen_category}") as products 
 			WHERE products.nutrition_grade < "{product_object.nutrition_grade}"
 			ORDER BY products.nutrition_grade
 
@@ -266,6 +246,41 @@ class Manager:
 
 
 ############################## PRIVATE METHODS ##############################
+
+	def _insert(self, object_to_insert):
+		"""In charge of create part of CRUD, for inserting data in DB
+			Insert method without commit, for a massive insert
+
+		Args:
+
+			object_to_insert (model object): Model object to insert in database
+
+		"""
+
+		table = object_to_insert.TABLE_NAME
+		columns = self._get_columns(object_to_insert)
+		values = self._get_values(object_to_insert, tuple(columns.split(', ')))
+		replacement = self._get_placeholders(len(values))
+
+		# If there is a duplicate key
+		if object_to_insert.__dict__.get('_duplicate_key'):
+
+			duplicate_key = "ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id)"
+			query = f"INSERT INTO {table} ({columns}) VALUES ({replacement}) {duplicate_key}"
+
+		# Elif there is a ignore attribute
+		elif object_to_insert.__dict__.get('_ignore'):
+
+			query = f"INSERT IGNORE INTO {table} ({columns}) VALUES ({replacement})"
+
+		else:
+
+			query = f"INSERT INTO {table} ({columns}) VALUES ({replacement})"
+
+		self._cursor.execute(query, values)
+
+		fresh_id = self._get_back_id()
+		setattr(object_to_insert, 'id', fresh_id)
 
 
 	def _select_column(self, class_ref, column):
@@ -399,9 +414,6 @@ class Manager:
 
 		self._cursor.executemany(f"INSERT INTO {table} ({columns}) VALUES ({replacement})", list_of_values)
 
-		self._cnx.commit()
-
-
 
 	def _is_there_relation(self, object_to_inspect):
 		"""Looking for an type list attr, which represent a many to many
@@ -419,32 +431,25 @@ class Manager:
 
 		"""
 
-		for attr in object_to_inspect.__dict__.values():
-
-			# If attr is a list and containing data, i.e. existing relation
-			if isinstance(attr, list) and len(attr) > 0 :
-
-				return True
-
-		return False
+		return object_to_inspect.belong_to
 
 
 
 	def _get_liaison_data(self, object_to_inspect):
-		"""Looking for data to insert in a liaison table, wich may contain
-			in a type list attribute
+		"""Get back data from a many to many relation attribute
 
 		Args:
 
 			object_to_inspect (model object): Model object inspect
 
+		Return:
+
+			object_to_inspect.belong_to (list): List containing data
+				object_to_inspect have a many to many liaison with
+
 		"""
 
-		for attr in object_to_inspect.__dict__.values():
-
-			if isinstance(attr, list):
-
-				return attr
+		return object_to_inspect.belong_to
 
 
 
@@ -466,7 +471,7 @@ class Manager:
 		
 		return ", ".join(attr  
 						 for i, attr in enumerate(all_attr)
-						 if i < object_to_inspect.COLUMNS
+						 if i >= object_to_inspect.DB_ATTRIBUTES
 						)
 
 
@@ -486,7 +491,6 @@ class Manager:
 		"""
 
 		return tuple(getattr(object_to_inspect, c) for c in columns)
-
 
 
 	def _get_placeholders(self, reference):

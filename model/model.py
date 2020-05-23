@@ -8,22 +8,25 @@ class Model:
 	"""Model class representing table database
 	"""
 
+	# How much attributes are define for DB behaviour
+	DB_ATTRIBUTES = 4
+
 	def __init__(self):
 
 		# Set this attribute True if there is a risk for registering twice the same
 		# information in database but you don't want to ignore it
-		self.duplicate_key = False
+		self._duplicate_key = False
 
 		# Set this attribute True for database to ignore a row if an information
 		# match a unique key already registered
-		self.ignore = False
+		self._ignore = False
 
 		# Filling it for representing a many to many relation
-		self.belong_to = list()
+		self._belong_to = list()
 
 		# Filling it with name of the table which there is a many to many
 		# relation
-		self.liaison_table = None
+		self._liaison_table = None
 		
 
 	def save(self):
@@ -33,7 +36,7 @@ class Model:
 		manager = Manager()
 		manager.set_db()
 
-		manager.insert(self)
+		manager.insert_one_at_a_time(self)
 
 
 
@@ -65,5 +68,31 @@ class Model:
 		return (value 
 				for i, value 
 				in enumerate(self.__dict__.values())
-			    if i < self.COLUMNS
+			    if i >= Model.DB_ATTRIBUTES
 			   )
+
+
+	@property
+	def duplicate_key(self):
+		return self._duplicate_key
+
+
+	@property
+	def ignore(self):
+		return self._ignore
+
+
+	@property
+	def belong_to(self):
+		return self._belong_to
+
+	@belong_to.setter
+	def belong_to(self, value):
+		self._belong_to = value
+
+
+	@property
+	def liaison_table(self):
+		return self._liaison_table
+	
+	

@@ -4,7 +4,7 @@
 DATABASE = 'orm/create_db.sql'
 DATABASE_NAME = 'alimentation'
 
-# CREDENTIALS = {'user':'root', 'password':'admin', 'host':'localhost'}
+CREDENTIALS = {'user':'user', 'password':'user', 'host':'localhost'}
 
 #Header for the API
 HEADER = {'User-Agent': 'OFF App in progress - v0.1'}

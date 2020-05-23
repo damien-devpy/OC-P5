@@ -27,9 +27,10 @@ class Substitution(Model):
 
 		"""
 
+		Model.__init__(self)
+		self._ignore = True
+
 		self.id = kwargs.get('id')
 		self.id_to_substitute = kwargs.get('id_to_substitute')
 		self.id_substitute = kwargs.get('id_substitute')
 
-		Model.__init__(self)
-		self.ignore = True

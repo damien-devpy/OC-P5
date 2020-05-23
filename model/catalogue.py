@@ -43,7 +43,7 @@ class Catalogue:
 		self._re_header = re_compile(r'^en:+|^fr:+')
 
 		# Regular expression for getting rid of spaces at beginning of a 
-		# category string
+		# string
 		self._re_spaces = re_compile(r'^ *')
 
 		# Regular expression for getting rid of dashes
@@ -124,10 +124,6 @@ class Catalogue:
 					# Keeping it
 					self._catalogue.append(product_obj)
 
-
-
-	def getter_catalogue(self):
+	@property
+	def catalogue(self):
 		return self._catalogue
-
-
-	catalogue = property(getter_catalogue)
