@@ -1,4 +1,5 @@
 # coding: utf-8
+"""ORM looking like, manage and interact with database."""
 
 from mysql import connector
 from configuration import (DATABASE,
@@ -12,7 +13,13 @@ class Manager:
     """In chage of managing data base."""
 
     def __init__(self):
+        """Init attributes of manager objets.
 
+        Attributes:
+            self._cnx (connect object): To connect to database
+            self._cursor (cursor object): To interact with database (CRUD)
+
+        """
         self._cnx = connector.connect(**CREDENTIALS)
         self._cursor = self._cnx.cursor()
 
@@ -23,6 +30,7 @@ class Manager:
                 self._cursor.execute(line)
 
     def set_db(self):
+        """Set to current data base."""
         self._cursor.execute(f"USE {DATABASE_NAME}")
 
     def is_there_db(self):
@@ -36,13 +44,8 @@ class Manager:
         self._cursor.fetchall()
 
         # If self._cursor contain a result, database exist, return True
-        if self._cursor.rowcount:
+        return self._cursor.rowcount
 
-            return True
-
-        else:
-
-            return False
 
     def insert_all(self, list_of_objects):
         """In charge of C part of CRUD (create), for a massive insert.
@@ -138,8 +141,8 @@ class Manager:
 
         # Getting columns of the ending table, represent by attributes of the
         # class reference
-        ending_columns = self._get_columns(class_ref_starting().liaison_table()
-                                           )
+        ending_columns = ", ".join(class_ref_starting().liaison_table().attrs()
+                                   )
 
         # Using query join, table name is needed with columns
         # in order to not being ambiguous
@@ -191,7 +194,7 @@ class Manager:
                 looking for a product to substitute
 
         """
-        columns = self._get_columns(product_object)
+        columns = ", ".join(product_object.attrs())
         columns_with_table_name = ', '.join(f"{product_object.TABLE_NAME}.{c}"
                                             for c in columns.split(', ')
                                             )
@@ -238,12 +241,12 @@ class Manager:
 
         """
         table = object_to_insert.TABLE_NAME
-        columns = self._get_columns(object_to_insert)
-        values = self._get_values(object_to_insert, tuple(columns.split(', ')))
+        columns = ", ".join(object_to_insert.attrs())
+        values = tuple(object_to_insert.values())
         replacement = self._get_placeholders(len(values))
 
         # If there is a duplicate key
-        if object_to_insert.__dict__.get('_duplicate_key'):
+        if object_to_insert.duplicate_key:
 
             duplicate_key = 'ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id)'
             query = (f'INSERT INTO {table} ({columns})'
@@ -251,7 +254,7 @@ class Manager:
                      )
 
         # Elif there is a ignore attribute
-        elif object_to_insert.__dict__.get('_ignore'):
+        elif object_to_insert.ignore:
 
             query = (f'INSERT IGNORE INTO {table} ({columns})'
                      f'VALUES ({replacement})'
@@ -301,7 +304,7 @@ class Manager:
 
         """
         table = object_to_read.TABLE_NAME
-        columns = self._get_columns(object_to_read)
+        columns = ", ".join(object_to_read.attrs())
 
         # Building where clause from the keyword argument
         # key = next((f"{i}" for i in kwargs.keys()))
@@ -341,7 +344,7 @@ class Manager:
 
         """
         table = class_ref().TABLE_NAME
-        columns = self._get_columns(class_ref())
+        columns = ", ".join(class_ref().attrs())
 
         self._cursor.execute(f"SELECT {columns} FROM {table}")
 
@@ -421,37 +424,6 @@ class Manager:
         """
         return object_to_inspect.belong_to
 
-    def _get_columns(self, object_to_inspect):
-        """In charge of collecting attributes names of an object.
-
-        Args:
-            object_to_inspect: Model object from which we want attributes
-                who represente columns in database
-
-        Returns:
-            columns (tuple): Tuple of columns of the table in DB
-
-        """
-        all_attr = object_to_inspect.__dict__
-
-        return ", ".join(attr
-                         for i, attr in enumerate(all_attr)
-                         if i >= object_to_inspect.DB_ATTRIBUTES
-                         )
-
-    def _get_values(self, object_to_inspect, columns):
-        """In charge of collecting attributes values of an object.
-
-        Args:
-            object_to_inspect (model object): Model object to inspect
-            columns (tuple): Represent attributes names of the object
-
-        Returns:
-            values (tuple): Tuple of values to insert in the DB
-
-        """
-        return tuple(getattr(object_to_inspect, c) for c in columns)
-
     def _get_placeholders(self, reference):
         """Set a tuple of sql placeholders.
 
@@ -487,7 +459,7 @@ class Manager:
             value (str): Value as string
 
         """
-        key = next((f"{i}" for i in kwargs.keys()))
+        key = next((f"{i}" for i in kwargs))
         value = f"{kwargs[key]}"
 
         return key, value

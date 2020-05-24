@@ -1,4 +1,5 @@
 # coding: utf-8
+"""Child class of Model, representing table substitution in database."""
 
 from model.model import Model
 
@@ -9,21 +10,17 @@ class Substitution(Model):
     # Table name in database this model class represent
     TABLE_NAME = "substitution"
 
-    # How much columns this model class has as attributes
-    # in declaration order
-    COLUMNS = 3
-
     def __init__(self, **kwargs):
-        """init method.
+        """Init attributes of substitution objects.
 
         Args:
             **kwargs (dict): Variable number of arguments
 
         Attributes:
-            self._barre_code_to_substitute (int): attribute that represent
-                barre_code_to_substitute column in DB
-            self._barre_code_substitute (int): attribute that represent
-                barre_code_substitute column in DB
+            self._id_to_substitute (int): attribute that represent
+                id_to_substitute column in DB
+            self._id_substitute (int): attribute that represent
+                id_substitute column in DB
 
         """
         Model.__init__(self)

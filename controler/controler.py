@@ -1,5 +1,7 @@
 # coding: utf-8
+"""Controler part of the app. Ensure logic of the app."""
 
+from sys import exit as sys_exit
 from configuration import ITEMS_TO_SHOW
 from model.product import Product
 from model.category import Category
@@ -8,18 +10,24 @@ from model.catalogue import Catalogue
 from orm.manager import Manager
 from view.view import View
 
-import pdb
-
 
 class Controler():
     """Controler part of the app.
 
-    Manage inputs from user and iteraction between objects for instance.
+    Manage inputs from user and iteraction between objects.
 
     """
 
     def __init__(self):
+        """Init attributes of controler objects.
 
+        Attributes:
+            self._catalogue (catalogue object): Needed to get data from the
+                api
+            self._manager (manager object): Needed for interaction with DB
+            self._vue (vue object): Needed for displaying ui
+
+        """
         self._catalogue = Catalogue()
         self._manager = Manager()
         self._vue = View()
@@ -34,7 +42,6 @@ class Controler():
         """
         # If database doesn't exist
         if not self._manager.is_there_db():
-
             # Getting data from the OpenFoodFacts API
             self._catalogue.get_data()
 
@@ -50,30 +57,26 @@ class Controler():
         self._main_menu()
 
     def _main_menu(self):
-
+        """Manage the main menu of the app."""
         self._vue.main_menu()
 
         input_user = input().lower()
 
         if input_user == '1':
-
             self._categories_menu()
 
         elif input_user == '2':
-
             self._substitution_menu()
 
         elif input_user == 'exit':
-
-            exit()
+            sys_exit()
 
         else:
-
             self._vue.make_correct_input()
-
             self._main_menu()
 
     def _categories_menu(self):
+        """Manage the category menu of the app."""
         self._page = 1
 
         # Getting list of categories from the database
@@ -88,7 +91,7 @@ class Controler():
         self._products_menu(category_choosed)
 
     def _products_menu(self, category_choosed):
-
+        """Manage the product menu of the app."""
         self._page = 1
 
         # Getting list of products from the category choosed
@@ -102,10 +105,12 @@ class Controler():
 
         product_choosed = self._navigation(products, self._categories_menu)
 
+        self._vue.old_product()
         self._vue.details_menu(product_choosed)
         self._find_substitute(product_choosed, category_choosed)
 
     def _find_substitute(self, product_choosed, category_choosed):
+        """Find substitute for a product choose by user."""
         # Keeping id of the product to substitute
         id_old_product = product_choosed.id
 
@@ -114,52 +119,47 @@ class Controler():
 
         # If a substitute has been found
         if id_old_product != product_choosed.id:
-
+            self._vue.new_product()
             self._vue.details_menu(product_choosed)
-
             self._vue.save_substitute()
 
             input_user = input().lower()
 
             # If user want to save the substitution
             if input_user == 'y':
-
                 substitution = Substitution(id_to_substitute=id_old_product,
                                             id_substitute=product_choosed.id,
                                             )
                 substitution.save()
-
                 self._main_menu()
 
             # Get back to the previous menu
             elif input_user == 'back':
-
                 self._products_menu(category_choosed)
 
             # Get back to the main menu
             elif input_user == 'main':
-
                 self._main_menu()
 
             # Exit the app
             elif input_user == 'exit':
+                sys_exit()
 
-                exit()
+            else:
+                self._main_menu()
 
         else:
-
             self._vue.better_product()
-
             self._main_menu()
 
     def _substitution_menu(self):
+        """Manage the substitute menu of the app."""
         self._page = 1
 
         substitutions = self._manager.select(Substitution)
 
         # If there is some data in database:
         if substitutions:
-
             substitutions_to_show = self._paging(substitutions)
             self._vue.sub_menu(substitutions_to_show, sub=True)
 
@@ -168,24 +168,18 @@ class Controler():
                                            sub=True,
                                            )
 
-            # While user want to see details about a substitution
-            while sub_choosed:
+            old_product = Product()
+            old_product.get(id=sub_choosed.id_to_substitute)
+            new_product = Product()
+            new_product.get(id=sub_choosed.id_substitute)
 
-                old_product = Product()
-                old_product.get(id=sub_choosed.id_to_substitute)
-                new_product = Product()
-                new_product.get(id=sub_choosed.id_substitute)
+            self._vue.details_menu(old_product, new_product)
 
-                self._vue.details_menu(old_product, new_product)
-                sub_choosed = self._navigation(substitutions,
-                                               self._main_menu,
-                                               sub=True,
-                                               )
+            self._substitution_menu()
 
         else:
-
             self._vue.empty_menu()
-            self._navigation(substitutions, self._main_menu, sub=True)
+            self._main_menu()
 
     def _navigation(self, items, func_reference, sub=False):
         """Manage the navigation through categories and products menus.
@@ -205,7 +199,6 @@ class Controler():
 
         # If user want to display another page
         if any((input_user == "<", input_user == ">")):
-
             if input_user == "<":
                 # Display previous page
                 self._page -= 1
@@ -222,45 +215,36 @@ class Controler():
 
         # Get back to the previous menu
         elif input_user == 'back':
-
             func_reference()
 
         # Get back to the main menu
         elif input_user == 'main':
-
             self._main_menu()
 
         # Exit the app
         elif input_user == 'exit':
-
-            exit()
+            sys_exit()
 
         else:
-
             items_to_show = self._paging(items)
             input_ok = False
 
             while not input_ok:
-
                 try:
-
                     input_user = int(input_user)
                     input_ok = True
 
                 except ValueError:
-
                     self._vue.make_correct_input()
                     self._vue.sub_menu(items_to_show, sub)
                     return self._navigation(items, func_reference, sub)
 
             # If input user match proposals
             if 1 <= input_user <= len(items_to_show):
-
                 # Return item asked minus 1, id are shown from 1 to 10
                 return items_to_show[input_user-1]
 
             else:
-
                 self._vue.make_correct_input()
                 self._vue.sub_menu(items_to_show, sub)
                 return self._navigation(items, func_reference, sub)
@@ -278,16 +262,13 @@ class Controler():
         total_pages = self._get_total_pages(list_of_items)
 
         if not 1 <= self._page <= total_pages:
-
             self._fix_page_asked(total_pages)
 
         # Return items that match page asked
         if self._page == 1:
-
             return list_of_items[0:ITEMS_TO_SHOW]
 
         else:
-
             start, end = self._get_slices(list_of_items)
 
             return list_of_items[start:end]
@@ -324,12 +305,10 @@ class Controler():
         """
         # Prevent user incorrect input
         if self._page < 1:
-
             # Setting to first one if negative
             self._page = 1
 
         elif self._page > total_pages:
-
             # Setting to last one if greater than total pages
             self._page = total_pages
 

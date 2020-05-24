@@ -1,4 +1,5 @@
 # coding: utf-8
+"""Mother class for child class representing table in database."""
 
 from orm.manager import Manager
 
@@ -10,20 +11,30 @@ class Model:
     DB_ATTRIBUTES = 4
 
     def __init__(self):
+        """Init attributes of classes instances who inherits from Model.
 
-        # Set this attribute True if there is a risk for registering twice
-        # the same information in database but you don't want to ignore it
+        Attributes:
+            self._duplicate_key (bool): Default to False. Set this attribute
+                True if there is a risk for registering twice the same
+                information in database but you don't want to ignore it.
+
+            self._ignore (bool): Default to False. Set this attribute True
+                for database to ignore a row if an information match a unique
+                key already registered.
+
+            self._belong_to (list): Filled for representing a many to many
+                relationship.
+
+            self._liaison_table (class reference): Default to None. Filling it
+                with name of the table which there is a many to many relation.
+
+        """
         self._duplicate_key = False
 
-        # Set this attribute True for database to ignore a row if an
-        # information match a unique key already registered
         self._ignore = False
 
-        # Filling it for representing a many to many relation
         self._belong_to = list()
 
-        # Filling it with name of the table which there is a many to many
-        # relation
         self._liaison_table = None
 
     def save(self):
@@ -40,34 +51,39 @@ class Model:
 
         manager.select(self, **kwargs)
 
-    def __iter__(self):
-        """Make model objects iterable.
+    def attrs(self):
+        """Return an iterator of attributes names of self.
 
-        Return:
-            iterator: An iterator that contain all attributes representing
-                columns in database
+        Only attributes representing columns in DB.
 
         """
-        # Return an iterator containing attributes of self that do
-        # represent a column in database
-        # (For instance, duplicate_key and belong_to attributes DO NOT
-        # represent columns of a table)
+        return (attr
+                for i, attr in enumerate(self.__dict__.keys())
+                if i >= Model.DB_ATTRIBUTES)
+
+    def values(self):
+        """Return an interator of attributes values of self.
+
+        Only attributes representing columns in DB.
+
+        """
         return (value
-                for i, value
-                in enumerate(self.__dict__.values())
-                if i >= Model.DB_ATTRIBUTES
-                )
+                for i, value in enumerate(self.__dict__.values())
+                if i >= Model.DB_ATTRIBUTES)
 
     @property
     def duplicate_key(self):
+        """Return bool private attribute."""
         return self._duplicate_key
 
     @property
     def ignore(self):
+        """Return bool private attribute."""
         return self._ignore
 
     @property
     def belong_to(self):
+        """Return list private attribute."""
         return self._belong_to
 
     @belong_to.setter
@@ -76,4 +92,5 @@ class Model:
 
     @property
     def liaison_table(self):
+        """Return many to many relationship private attribute."""
         return self._liaison_table

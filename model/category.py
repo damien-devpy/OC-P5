@@ -1,4 +1,5 @@
 # coding: utf-8
+"""Child class of Model, representing table category in database."""
 
 from model.model import Model
 import model.product
@@ -10,12 +11,8 @@ class Category(Model):
     # Table name in database this model class represent
     TABLE_NAME = "category"
 
-    # How much columns this model class has as attributes
-    # in declaration order
-    COLUMNS = 2
-
     def __init__(self, **kwargs):
-        """init method
+        """Init attributes of category objects.
 
         Args:
             **kwargs (dict): Variable number of arguments

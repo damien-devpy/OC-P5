@@ -1,6 +1,9 @@
 # coding: utf-8
+"""View part of the app. Display all ui."""
 
+from configuration import URL_FOR_PRODUCT
 from model.product import Product
+from model.category import Category
 
 
 class View:
@@ -21,10 +24,13 @@ class View:
         print("- 'exit' for exit (: \n")
 
     def save_substitute(self):
-        print("\nDo you want to save this substitution ?", end=' ')
+        """Ask user if he want to save current substitution."""
+        print(f"{'_':_^200}")
+        print("Do you want to save this substitution ?", end=' ')
         print("('y' for yes)\n")
 
     def better_product(self):
+        """Inform user he alreay have the best product."""
         print("\nYou already have the safest product !\n")
 
     def make_correct_input(self):
@@ -35,6 +41,14 @@ class View:
         """Inform user there is nothing yet."""
         print("\nNothing recorded yet !\n")
 
+    def old_product(self):
+        """Display old product mention."""
+        print(f"\n\n{'Old product':_^200}")
+
+    def new_product(self):
+        """Display new product mention."""
+        print(f"{'New product':_^200}")
+
     def sub_menu(self, list_of_items, sub=False):
         """Get information to print considering page asked.
 
@@ -44,18 +58,30 @@ class View:
                 is a list of substitution objects
 
         """
-        print()
-
         if not sub:
+            if isinstance(list_of_items[0], Category):
+                print(f"\n{'Categories':_^200}\n")
 
-            for i, item in enumerate(list_of_items):
+                for i, item in enumerate(list_of_items):
+                    print(f"{i+1} - ", end="")
+                    print(f"{item.name}")
 
-                print(f"{i+1}. {item.name} ({item.id})")
+            elif isinstance(list_of_items[0], Product):
+                print(f"\n{'Products':_^200}\n")
+                print(f"""{' Nom':<70} {'Nutriscore':<40}
+                      {'Brand':<40} {'Quantity'}
+                      """)
 
-            print()
+                for i, item in enumerate(list_of_items):
+                    line = (f"{i+1:>2} - {item.name:<70}"
+                            f"{item.nutrition_grade:<35}"
+                            f"{item.brand:<45}"
+                            f"{item.quantity}"
+                            )
+
+                    print(f"{line}")
 
         else:
-
             self._sub_menu_substitution(list_of_items)
 
     def _sub_menu_substitution(self, list_of_items):
@@ -65,8 +91,6 @@ class View:
             list_of_items (list): List of items to print
 
         """
-        print()
-
         for i, item in enumerate(list_of_items):
 
             old_product = Product()
@@ -74,38 +98,37 @@ class View:
             new_product = Product()
             new_product.get(id=item.id_substitute)
 
-            print(f'{i+1} - '
-                  f'{old_product.id}',
-                  f'{old_product.name}',
-                  f'{old_product.nutrition_grade}',
-                  f'{old_product.brand}',
-                  end=''
-                  )
-
-            print(f' -> '
-                  f'{new_product.id}',
-                  f'{new_product.name}',
-                  f'{new_product.nutrition_grade}',
-                  f'{new_product.brand}'
-                  )
-            print()
+            print(f"""\n{i+1} -
+                  {old_product.name} -
+                  Nutritrion grade: {old_product.nutrition_grade}
+                  """)
+            print(f"{'------>':<10}", end='')
+            print(f"""{new_product.name} -
+                  Nutritrion grade: {new_product.nutrition_grade}
+                  ({URL_FOR_PRODUCT + str(new_product.barre_code)})\n
+                  """)
 
     def details_menu(self, *item_to_detail):
         """In charge of printing details of an item.
 
         Args:
-            details_item (iterable): An iterable to print
+            item_to_detail (iterable): An iterable to print
 
         """
         for item in item_to_detail:
 
-            for i, attr in enumerate(item):
-
-                if i > 0:
-                    print(attr)
-
-                # Else, id attribute is not shown to the user
-                else:
-                    continue
+            print(f"{'_':_^200}")
+            print(f"{'Barre code: ':>2}", end='')
+            print(f"{item.barre_code}\n")
+            print(f"{'Product name: '+item.name:>2}\n")
+            print(f"{'Nutrition grade: '+item.nutrition_grade:>2}\n")
+            print(f"{'Brand: '+item.brand:>2}\n")
+            print(f"{'Where to find it: '+item.store:>2}\n")
+            print(f"""{'Link to the product: '
+                  +URL_FOR_PRODUCT
+                  + str(item.barre_code):>2}\n
+                  """)
+            print(f"{'Details: '+item.ingredients:>2}\n")
+            print(f"{'_':_^200}")
 
             print()

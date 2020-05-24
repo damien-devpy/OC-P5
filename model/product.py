@@ -1,4 +1,5 @@
 # coding: utf-8
+"""Child class of Model, representing table product in database."""
 
 from model.model import Model
 from orm.manager import Manager
@@ -11,12 +12,8 @@ class Product(Model):
     # Table name in database this model class represent
     TABLE_NAME = "product"
 
-    # How much columns this model class has as attributes
-    # in declaration order
-    COLUMNS = 7
-
     def __init__(self, **kwargs):
-        """init method
+        """Init attributes of product objects.
 
         Args:
             **kwargs (dict): Variable number of arguments
@@ -42,6 +39,7 @@ class Product(Model):
         self.name = kwargs.get('name')
         self.nutrition_grade = kwargs.get('nutrition_grade')
         self.brand = kwargs.get('brand')
+        self.store = kwargs.get('store')
         self.ingredients = kwargs.get('ingredients')
         self.quantity = kwargs.get('quantity')
 
