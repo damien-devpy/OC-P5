@@ -3,35 +3,31 @@
 from model.model import Model
 import model.product
 
+
 class Category(Model):
-	"""Model class of the category table in database
-	"""
+    """Model class of the category table in database."""
 
-	# Table name in database this model class represent
-	TABLE_NAME = "category"
-	
-	# How much columns this model class has as attributes
-	# in declaration order
-	COLUMNS = 2
+    # Table name in database this model class represent
+    TABLE_NAME = "category"
 
-	def __init__(self, **kwargs):
-		"""init method
+    # How much columns this model class has as attributes
+    # in declaration order
+    COLUMNS = 2
 
-		Args:
+    def __init__(self, **kwargs):
+        """init method
 
-			**kwargs (dict): Variable number of arguments
+        Args:
+            **kwargs (dict): Variable number of arguments
 
-		Attributes:
+        Attributes:
+            self._id_cat (int): attribute that represent id column in DB
+            self._name (str): attribute that represent name column in DB
 
-			self._id_cat (int): attribute that represent id column in DB
-			self._name (str): attribute that represent name column in DB
+        """
+        Model.__init__(self)
+        self._duplicate_key = True
+        self._liaison_table = model.product.Product
 
-		"""
-
-		Model.__init__(self)
-		self._duplicate_key = True
-		self._liaison_table = model.product.Product
-
-		self.id = kwargs.get('id')
-		self.name = kwargs.get('name')
-
+        self.id = kwargs.get('id')
+        self.name = kwargs.get('name')

@@ -2,12 +2,14 @@
 
 from controler.controler import Controler
 
+
 def main():
 
-	controler = Controler()
+    controler = Controler()
 
-	controler.controler()
+    controler.controler()
+
 
 if __name__ == "__main__":
 
-	main()
+    main()

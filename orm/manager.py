@@ -2,546 +2,492 @@
 
 from mysql import connector
 from configuration import (DATABASE,
-						   DATABASE_NAME,
-						   CREDENTIALS,
-						  )
+                           DATABASE_NAME,
+                           CREDENTIALS,
+                           )
 from model.keyworderror import KeywordError
-import pdb
+
 
 class Manager:
-	"""In chage of managing data base
-	"""
+    """In chage of managing data base."""
 
-	def __init__(self):
+    def __init__(self):
 
-		self._cnx = connector.connect(**CREDENTIALS)
-		self._cursor = self._cnx.cursor()
+        self._cnx = connector.connect(**CREDENTIALS)
+        self._cursor = self._cnx.cursor()
 
+    def create_db(self):
+        """Create the database from a sql file."""
+        with open(DATABASE, mode='r', encoding='utf-8') as sql_file:
+            for line in sql_file:
+                self._cursor.execute(line)
 
-	def create_db(self):
-		"""Creating the database from a sql file
-		"""
+    def set_db(self):
+        self._cursor.execute(f"USE {DATABASE_NAME}")
 
-		with open(DATABASE, mode='r', encoding='utf-8') as sql_file:
-			for line in sql_file:
-				self._cursor.execute(line)
+    def is_there_db(self):
+        """Check if database exist.
 
+        Return:
+            bool: True if database exist, False otherwhise
 
-	def set_db(self):
+        """
+        self._cursor.execute(f"SHOW DATABASES LIKE '{DATABASE_NAME}'")
+        self._cursor.fetchall()
 
-		self._cursor.execute(f"USE {DATABASE_NAME}")
+        # If self._cursor contain a result, database exist, return True
+        if self._cursor.rowcount:
 
+            return True
 
-	def is_there_db(self):
-		"""Checking if database exist
+        else:
 
-		Return:
+            return False
 
-			bool: True if database exist, False otherwhise
+    def insert_all(self, list_of_objects):
+        """In charge of C part of CRUD (create), for a massive insert.
 
-		"""
+        Args:
+            list_of_objects (list): A list of objects to insert at once in DB
 
-		self._cursor.execute(f"SHOW DATABASES LIKE '{DATABASE_NAME}'")
-		self._cursor.fetchall()
+        """
+        # Before inserting data in DB, checking if objects contains
+        # a relation to any liaison table
+        relation_exist = self._is_there_relation(list_of_objects[0])
 
-		# If self._cursor contain a result, database exist, return True
-		if self._cursor.rowcount:
+        if relation_exist:
 
-			return True
+            for an_object in list_of_objects:
 
-		else:
+                # Filling table with the current object
+                self._insert(an_object)
 
-			return False
+                data_liaison_table = self._get_liaison_data(an_object)
 
+                # Filling table for every objects in data_liaison_table
+                for liaison_object in data_liaison_table:
 
-	def insert_all(self, list_of_objects):
-		"""In charge of C part of CRUD (create), for a massive insert
+                    self._insert(liaison_object)
 
-		Args:
+                # After inserting every objects in their proper tables
+                # Filling the liaison table
+                self._filling_liaison_table(an_object, data_liaison_table)
 
-			list_of_objects (list): A list of objects to insert at once in DB
+        else:
 
-		"""
+            for an_object in list_of_objects:
 
-		# Before inserting data in DB, checking if objects contains
-		# a relation to any liaison table
-		relation_exist = self._is_there_relation(list_of_objects[0])
+                self._insert(an_object)
 
-		if relation_exist:
+        self._cnx.commit()
 
-			for an_object in list_of_objects:
+    def insert_one_at_a_time(self, object_to_insert):
+        """In charge of C part of CRUD (create), for inserting data in DB.
 
-				# Filling table with the current object
-				self._insert(an_object)
+        Args:
+            object_to_insert (model object): Model object to insert in database
 
-				data_liaison_table = self._get_liaison_data(an_object)
-				
-				# Filling table for every objects in data_liaison_table
-				for liaison_object in data_liaison_table:
-					
-					self._insert(liaison_object)
+        """
+        self._insert(object_to_insert)
 
-				# After inserting every objects in their proper tables
-				# Filling the liaison table
-				self._filling_liaison_table(an_object, data_liaison_table)
+        self._cnx.commit()
 
-		else:
+    def select(self, an_object, column=None, **kwargs):
+        """In charge of R part of CRUD (read), for selecting data in DB.
 
-			for an_object in list_of_objects:
+        Args:
+            class_ref: If select query is for a column or a table, an_object is
+                a class reference for the table in database. For a specific row
+                an_object will be a model object
 
-				self._insert(an_object)
+            column (str): Default to None. Otherwise, meaning method has to
+                look for a specific column in the table DB
 
-		self._cnx.commit()
+            **kwargs (dict): Keyword argument for looking a specific row
 
+        """
+        self._cursor.execute("START TRANSACTION")
 
-	def insert_one_at_a_time(self, object_to_insert):
-		"""In charge of C part of CRUD (create), for inserting data in DB
+        # If a specific column is asked
+        if column:
 
-		Args:
+            return self._select_column(an_object, column)
 
-			object_to_insert (model object): Model object to insert in database
+        # Elif, a specific row is asked
+        elif kwargs:
 
-		"""
+            self._select_row(an_object, **kwargs)
 
-		self._insert(object_to_insert)
+        # Else, an entire table is asked
+        else:
 
-		self._cnx.commit()
+            return self._select_table(an_object)
 
+        self._cnx.commit()
 
-	def select(self, an_object, column=None, **kwargs):
-		"""In charge of R part of CRUD (read), for selecting data in DB
+    def select_through_join(self,
+                            class_ref_starting,
+                            **kwargs,
+                            ):
+        """Specific method for select data in DB throught a table liaison."""
+        starting_table = class_ref_starting.TABLE_NAME
 
-		Args:
+        key, value = self._get_where_clause(**kwargs)
 
-			class_ref: If select query is for a column or a table, an_object is
-				a class reference for the table in database. For a specific row
-				an_object will be a model object
+        ending_table = class_ref_starting().liaison_table().TABLE_NAME
 
-			column (str): Default to None. Otherwise, meaning method has to
-				look for a specific column in the table DB
+        # Getting columns of the ending table, represent by attributes of the
+        # class reference
+        ending_columns = self._get_columns(class_ref_starting().liaison_table()
+                                           )
 
-			**kwargs (dict): Keyword argument for looking a specific row
+        # Using query join, table name is needed with columns
+        # in order to not being ambiguous
+        ending_table_columns = ", ".join(f"{ending_table}.{c}"
+                                         for c in ending_columns.split(", ")
+                                         )
 
-		Return:
+        liaison_table_name = sorted([starting_table, ending_table])
+        liaison_table_name = (liaison_table_name[1] +
+                              "_" +
+                              liaison_table_name[0]
+                              )
 
-		"""
+        query = (f'SELECT {ending_table_columns} FROM {ending_table} '
+                 f'INNER JOIN {liaison_table_name} '
+                 f'ON {ending_table}.id = '
+                 f'{liaison_table_name}.{ending_table}_id '
+                 f'INNER JOIN {starting_table} '
+                 f'ON {starting_table}.id = '
+                 f'{liaison_table_name}.{starting_table}_id '
+                 f'WHERE {starting_table}.{key} = "{value}"'
+                 )
 
-		self._cursor.execute("START TRANSACTION")
+        self._cursor.execute(query)
 
-		# If a specific column is asked
-		if column:
+        tmp_list = list()
 
-			return self._select_column(an_object, column)
+        for value in self._cursor.fetchall():
 
-		# Elif, a specific row is asked
-		elif kwargs:
+            tmp_object = class_ref_starting().liaison_table()
 
-			self._select_row(an_object, **kwargs)
+            for i, c in enumerate(tuple(ending_columns.split(', '))):
 
-		# Else, an entire table is asked
-		else:
+                setattr(tmp_object, c, value[i])
 
-			return self._select_table(an_object)
+            tmp_list.append(tmp_object)
 
-		self._cnx.commit()
+        return tmp_list
 
+    def substitution(self, product_object, chosen_category):
+        """Specifically in charge for looking a product substitution.
 
-	def select_through_join(self,
-							class_ref_starting,
-							**kwargs,
-							):
-		"""Specific method for selecting data in DB if we need to go through
-			table liaison
+        Substitution occur IN PLACE.
 
-		"""
+        Args:
+            product_object (model object): Product choosed by user for looking
+                to a substitute
+            chosen_category (str): Category choosed by user for
+                looking for a product to substitute
 
-		starting_table = class_ref_starting.TABLE_NAME
-		
-		key, value = self._get_where_clause(**kwargs)
+        """
+        columns = self._get_columns(product_object)
+        columns_with_table_name = ', '.join(f"{product_object.TABLE_NAME}.{c}"
+                                            for c in columns.split(', ')
+                                            )
 
-		ending_table = class_ref_starting().liaison_table().TABLE_NAME
+        query = f"""
+            SELECT {columns} FROM (
+                SELECT {columns_with_table_name}
+                FROM {product_object.TABLE_NAME}
+                INNER JOIN product_category
+                ON product.id = product_category.product_id
+                INNER JOIN category
+                ON product_category.category_id = category.id
+                INNER JOIN category as category_2
+                ON category.name = category_2.name
+                WHERE category_2.name = "{chosen_category}") as products
+            WHERE products.nutrition_grade < "{product_object.nutrition_grade}"
+            ORDER BY products.nutrition_grade
 
-		# Getting columns of the ending table, represent by attributes of the 
-		# class reference
-		ending_columns = self._get_columns(class_ref_starting().liaison_table())
+                """
 
-		# Using query join, table name is needed with columns
-		# in order to not being ambiguous 
-		ending_table_columns = ", ".join(f"{ending_table}.{c}" for c in ending_columns.split(", "))
+        self._cursor.execute(query)
 
-		liaison_table_name = sorted([starting_table, ending_table])
-		liaison_table_name = liaison_table_name[1] + "_" + liaison_table_name[0]
+        # Making columns an iterable
+        columns = tuple(columns.split(', '))
 
-		self._cursor.execute(f"""
-			SELECT {ending_table_columns} FROM {ending_table}
-			INNER JOIN {liaison_table_name}
-			ON {ending_table}.id = {liaison_table_name}.{ending_table}_id
-			INNER JOIN {starting_table}
-			ON {starting_table}.id = {liaison_table_name}.{starting_table}_id
-			WHERE {starting_table}.{key} = "{value}" """
-		)
+        # Getting first result of the query, i.e. product with better
+        # nutriscore
+        result = self._cursor.fetchmany(size=1)
 
-		tmp_list = list()
+        # If a better product has been found
+        if result:
 
-		for value in self._cursor.fetchall():
-			
-			tmp_object = class_ref_starting().liaison_table()
+            for i, value in enumerate(result[0]):
 
-			for i, c in enumerate(tuple(ending_columns.split(', '))):
+                setattr(product_object, columns[i], value)
 
-				setattr(tmp_object, c, value[i])
+    def _insert(self, object_to_insert):
+        """In charge of create part of CRUD.
 
-			tmp_list.append(tmp_object)
+        Insert method without commit, for a massive insert
 
+        Args:
+            object_to_insert (model object): Model object to insert in database
 
-		return tmp_list
+        """
+        table = object_to_insert.TABLE_NAME
+        columns = self._get_columns(object_to_insert)
+        values = self._get_values(object_to_insert, tuple(columns.split(', ')))
+        replacement = self._get_placeholders(len(values))
 
+        # If there is a duplicate key
+        if object_to_insert.__dict__.get('_duplicate_key'):
 
-	def substitution(self, product_object, chosen_category):
-		"""Specifically in charge for looking a product substitution
-			Substitute occur IN PLACE
+            duplicate_key = 'ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id)'
+            query = (f'INSERT INTO {table} ({columns})'
+                     f'VALUES ({replacement}) {duplicate_key}'
+                     )
 
-		Args:
+        # Elif there is a ignore attribute
+        elif object_to_insert.__dict__.get('_ignore'):
 
-			product_object (model object): Product choosed by user for looking
-				to a substitute
-			chosen_category (str): Category choosed by user for
-				looking for a product to substitute
+            query = (f'INSERT IGNORE INTO {table} ({columns})'
+                     f'VALUES ({replacement})'
+                     )
 
-		"""
+        else:
 
-		columns = self._get_columns(product_object)
-		columns_with_table_name = ', '.join(f"{product_object.TABLE_NAME}.{c}" for c in columns.split(', '))
+            query = f'INSERT INTO {table} ({columns}) VALUES ({replacement})'
 
-		query = f"""
-			SELECT {columns} FROM (
-				SELECT {columns_with_table_name}
-				FROM {product_object.TABLE_NAME}
-				INNER JOIN product_category
-				ON product.id = product_category.product_id
-				INNER JOIN category
-				ON product_category.category_id = category.id
-				INNER JOIN category as category_2
-				ON category.name = category_2.name
-				WHERE category_2.name = "{chosen_category}") as products 
-			WHERE products.nutrition_grade < "{product_object.nutrition_grade}"
-			ORDER BY products.nutrition_grade
+        self._cursor.execute(query, values)
 
-				"""
+        fresh_id = self._get_back_id()
+        setattr(object_to_insert, 'id', fresh_id)
 
-		self._cursor.execute(query)
+    def _select_column(self, class_ref, column):
+        """Private method for reading a specific column in DB.
 
-		# Making columns an iterable
-		columns = tuple(columns.split(', '))
+        Args:
+            class_ref (class): Reference to the class model representing a
+                table in database, on which the search has to be done
+            columns (str): Specific column to look for in the table
 
-		# Getting first result of the query, i.e. product with better nutriscore
-		result = self._cursor.fetchmany(size=1)
+        """
+        table = class_ref.TABLE_NAME
 
-		# If a better product has been found
-		if result:
+        self._cursor.execute(f"SELECT {column} FROM {table}")
 
-			for i, value in enumerate(result[0]):
+        tmp_list = list()
 
-				setattr(product_object, columns[i], value)
+        for value in self._cursor.fetchall():
 
+            tmp_object = class_ref()
 
-############################## PRIVATE METHODS ##############################
+            setattr(tmp_object, column, value[0])
 
-	def _insert(self, object_to_insert):
-		"""In charge of create part of CRUD, for inserting data in DB
-			Insert method without commit, for a massive insert
+            tmp_list.append(tmp_object)
 
-		Args:
+        return tmp_list
 
-			object_to_insert (model object): Model object to insert in database
+    def _select_row(self, object_to_read, **kwargs):
+        """Private method for getting a specific row in DB.
 
-		"""
+        Args:
+            object_to_read (model object): Model object used to select table to
+            read, and filled with information of the specific row
+            kwargs (dict): Keyword argument for a specific row
 
-		table = object_to_insert.TABLE_NAME
-		columns = self._get_columns(object_to_insert)
-		values = self._get_values(object_to_insert, tuple(columns.split(', ')))
-		replacement = self._get_placeholders(len(values))
+        """
+        table = object_to_read.TABLE_NAME
+        columns = self._get_columns(object_to_read)
 
-		# If there is a duplicate key
-		if object_to_insert.__dict__.get('_duplicate_key'):
+        # Building where clause from the keyword argument
+        # key = next((f"{i}" for i in kwargs.keys()))
+        # value = f"{kwargs[key]}"
 
-			duplicate_key = "ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id)"
-			query = f"INSERT INTO {table} ({columns}) VALUES ({replacement}) {duplicate_key}"
+        key, value = self._get_where_clause(**kwargs)
 
-		# Elif there is a ignore attribute
-		elif object_to_insert.__dict__.get('_ignore'):
+        query = f"SELECT {columns} FROM {table} WHERE {key}='{value}'"
 
-			query = f"INSERT IGNORE INTO {table} ({columns}) VALUES ({replacement})"
+        self._cursor.execute(query)
 
-		else:
+        # Getting the result of the query
+        result = self._cursor.fetchone()
 
-			query = f"INSERT INTO {table} ({columns}) VALUES ({replacement})"
+        # If keyword asked doesn't exist in database
+        try:
+            if self._cursor.rowcount == -1:
+                raise KeywordError(f'{key} : {value}'
+                                   'doesn\'t exist in database !'
+                                   )
 
-		self._cursor.execute(query, values)
+        except KeywordError as err:
+            print(err)
 
-		fresh_id = self._get_back_id()
-		setattr(object_to_insert, 'id', fresh_id)
+        else:
 
+            # Filling attributes object with result
+            for i, c in enumerate(tuple(columns.split(", "))):
+                setattr(object_to_read, c, result[i])
 
-	def _select_column(self, class_ref, column):
-		"""Private method for reading a specific column in table from the
-			database
+    def _select_table(self, class_ref):
+        """Private method for getting an entire table from the database.
 
-		Args: 
+        Args:
+            class_ref (class reference): Model class reference representing
+                table in database from which we want data
 
-			class_ref (class): Reference to the class model representing a
-				table in database, on which the search has to be done
-			columns (str): Specific column to look for in the table
+        """
+        table = class_ref().TABLE_NAME
+        columns = self._get_columns(class_ref())
 
-		"""
+        self._cursor.execute(f"SELECT {columns} FROM {table}")
 
-		table = class_ref.TABLE_NAME
+        list_of_objects = list()
 
-		self._cursor.execute(f"SELECT {column} FROM {table}")
+        for values in self._cursor.fetchall():
 
-		tmp_list = list()
+            tmp_object = class_ref()
 
-		for value in self._cursor.fetchall():
+            for i, c in enumerate(tuple(columns.split(", "))):
 
-			tmp_object = class_ref()
+                setattr(tmp_object, c, values[i])
 
-			setattr(tmp_object, column, value[0])
+            list_of_objects.append(tmp_object)
 
-			tmp_list.append(tmp_object)
+        return list_of_objects
 
-		return tmp_list
+    def _filling_liaison_table(self, object_linked, liaison_data):
+        """In charge of C part of CRUD in a liaison table.
 
+        Args:
+            object_linked (model object): Model object linked to the liaison
+                table by a many to many relation
+            liaison_data (list): Model objects to insert in
+            the liaison table with the object_linked
 
-	def _select_row(self, object_to_read, **kwargs):
-		"""Private method for getting a specific row in a table from the
-			database
+        """
+        table = object_linked.TABLE_NAME + '_' + liaison_data[0].TABLE_NAME
+        columns = (f'{object_linked.TABLE_NAME}' +
+                   '_id' +
+                   ', ' +
+                   f'{liaison_data[0].TABLE_NAME}' +
+                   '_id'
+                   )
 
-		Args:
+        replacement = self._get_placeholders(len(tuple(columns.split(', '))))
 
-			object_to_read (model object): Model object used to select table to
-			read, and filled with information of the specific row
-			kwargs (dict): Keyword argument for a specific row
+        list_of_values = list()
 
-		"""
+        # For each object in liaison data
+        # Getting the id attribute of it
+        for an_object in liaison_data:
+            list_of_values.append((object_linked.id, an_object.id))
 
-		table = object_to_read.TABLE_NAME
-		columns = self._get_columns(object_to_read)
+        query = (f'INSERT INTO {table} ({columns})'
+                 f'VALUES ({replacement})'
+                 )
 
-		# Building where clause from the keyword argument
-		# key = next((f"{i}" for i in kwargs.keys()))
-		# value = f"{kwargs[key]}"
+        self._cursor.executemany(query, list_of_values)
 
-		key, value = self._get_where_clause(**kwargs)
+    def _is_there_relation(self, object_to_inspect):
+        """Return a type list attr.
 
-		query = f"SELECT {columns} FROM {table} WHERE {key}='{value}'"
+        Represent a many to many relation.
 
-		self._cursor.execute(query)
+        Args:
+            object_to_inspect (model object): Model object to inspect
 
-		# Getting the result of the query
-		result = self._cursor.fetchone()
 
-		# If keyword asked doesn't exist in database
-		try:
-			if self._cursor.rowcount == -1:
-				raise KeywordError(f"{key} : {value} doesn't exist in database !")
+        Return:
+            Bool: Return True if there is many to many relation, False
+                otherwise
 
-		except KeywordError as err:
-			print(err)
+        """
+        return object_to_inspect.belong_to
 
-		else:
+    def _get_liaison_data(self, object_to_inspect):
+        """Get back data from a many to many relation attribute.
 
-			# Filling attributes object with result
-			for i, c in enumerate(tuple(columns.split(", "))):
-				setattr(object_to_read, c, result[i])
+        Args:
+            object_to_inspect (model object): Model object inspect
 
+        Return:
+            object_to_inspect.belong_to (list): List containing data
+                object_to_inspect have a many to many liaison with
 
+        """
+        return object_to_inspect.belong_to
 
-	def _select_table(self, class_ref):
-		"""Private method for getting an entire table from the database
+    def _get_columns(self, object_to_inspect):
+        """In charge of collecting attributes names of an object.
 
-		Args:
+        Args:
+            object_to_inspect: Model object from which we want attributes
+                who represente columns in database
 
-			class_ref (class reference): Model class reference representing
-				table in database from which we want data
+        Returns:
+            columns (tuple): Tuple of columns of the table in DB
 
-		"""
+        """
+        all_attr = object_to_inspect.__dict__
 
-		table = class_ref().TABLE_NAME
-		columns = self._get_columns(class_ref())
+        return ", ".join(attr
+                         for i, attr in enumerate(all_attr)
+                         if i >= object_to_inspect.DB_ATTRIBUTES
+                         )
 
-		self._cursor.execute(f"SELECT {columns} FROM {table}")
+    def _get_values(self, object_to_inspect, columns):
+        """In charge of collecting attributes values of an object.
 
-		list_of_objects = list()
+        Args:
+            object_to_inspect (model object): Model object to inspect
+            columns (tuple): Represent attributes names of the object
 
-		for values in self._cursor.fetchall():
+        Returns:
+            values (tuple): Tuple of values to insert in the DB
 
-			tmp_object = class_ref()
+        """
+        return tuple(getattr(object_to_inspect, c) for c in columns)
 
-			for i, c in enumerate(tuple(columns.split(", "))):
+    def _get_placeholders(self, reference):
+        """Set a tuple of sql placeholders.
 
-				setattr(tmp_object, c, values[i])
+        Args:
+            reference (int): How much sql placeholders needs to be define
 
-			list_of_objects.append(tmp_object)
+        Returns:
+            placeholders (tuple): Same size tuple as values, containing sql
+                placeholders
 
+        """
+        return ", ".join('%s' for i in range(reference))
 
-		return list_of_objects
+    def _get_back_id(self):
+        """Return last inserted id.
 
+        Return
+            id (int): Last inserted id in DB
 
+        """
+        self._cursor.execute("SELECT LAST_INSERT_ID()")
 
-	def _filling_liaison_table(self, object_linked, liaison_data):
-		"""In charge of C part of CRUD (create), for inserting data
-			in a liaison table in DB
+        return self._cursor.fetchall()[0][0]
 
-		Args:
+    def _get_where_clause(self, **kwargs):
+        """Take a keyword argument and return a pair of key/values as strings.
 
-			object_linked (model object): Model object linked to the liaison
-				table by a many to many relation
-			liaison_data (list): Model objects to insert in 
-			the liaison table with the object_linked
+        Args:
+            kwargs (dict): Keyword argument
 
-		"""
+        Return:
+            key (str): Key as string
+            value (str): Value as string
 
-		table = object_linked.TABLE_NAME + '_' + liaison_data[0].TABLE_NAME
-		columns = f"{object_linked.TABLE_NAME + '_id' + ', ' + liaison_data[0].TABLE_NAME + '_id'}"
-		replacement = self._get_placeholders(len(tuple(columns.split(', '))))
+        """
+        key = next((f"{i}" for i in kwargs.keys()))
+        value = f"{kwargs[key]}"
 
-		list_of_values = list()
-
-		# For each object in liaison data
-		# Getting the id attribute of it
-		for an_object in liaison_data:
-			list_of_values.append((object_linked.id, an_object.id))
-
-		self._cursor.executemany(f"INSERT INTO {table} ({columns}) VALUES ({replacement})", list_of_values)
-
-
-	def _is_there_relation(self, object_to_inspect):
-		"""Looking for an type list attr, which represent a many to many
-			relation
-
-		Args: 
-
-			object_to_inspect (model object): Model object to inspect
-
-
-		Return:
-
-			Bool: Return True if there is many to many relation, False
-				otherwise
-
-		"""
-
-		return object_to_inspect.belong_to
-
-
-
-	def _get_liaison_data(self, object_to_inspect):
-		"""Get back data from a many to many relation attribute
-
-		Args:
-
-			object_to_inspect (model object): Model object inspect
-
-		Return:
-
-			object_to_inspect.belong_to (list): List containing data
-				object_to_inspect have a many to many liaison with
-
-		"""
-
-		return object_to_inspect.belong_to
-
-
-
-	def _get_columns(self, object_to_inspect):
-		"""In charge of collecting attributes names of an object
-
-		Args:
-
-			object_to_inspect: Model object from which we want attributes 
-				who represente columns in database
-
-		Returns:
-
-			columns (tuple): Tuple of columns of the table in DB
-
-		"""
-
-		all_attr = object_to_inspect.__dict__
-		
-		return ", ".join(attr  
-						 for i, attr in enumerate(all_attr)
-						 if i >= object_to_inspect.DB_ATTRIBUTES
-						)
-
-
-
-	def _get_values(self, object_to_inspect, columns):
-		"""In charge of collecting attributes values of an object
-
-		Args:
-
-			object_to_inspect (model object): Model object to inspect
-			columns (tuple): Represent attributes names of the object
-
-		Returns:
-
-			values (tuple): Tuple of values to insert in the DB
-
-		"""
-
-		return tuple(getattr(object_to_inspect, c) for c in columns)
-
-
-	def _get_placeholders(self, reference):
-		"""In charge of setting a tuple of sql placeholders regarding the size
-			of another tuple argument
-
-		Args:
-
-			reference (int): How much sql placeholders needs to be define
-
-		Returns:
-
-			placeholders (tuple): Same size tuple as values, containing sql
-				placeholders
-
-		"""
-
-		return ", ".join('%s' for i in range(reference))
-
-
-
-	def _get_back_id(self):
-		"""Return last inserted id
-
-		Return 
-
-			id (int): Last inserted id in DB
-
-		"""
-
-		self._cursor.execute("SELECT LAST_INSERT_ID()")
-
-		return self._cursor.fetchall()[0][0]
-
-
-
-	def _get_where_clause(self, **kwargs):
-		"""Take a keyword argument and return a pair of key/values as strings
-
-		Args:
-
-			kwargs (dict): Keyword argument
-
-		Return:
-
-			key (str): Key as string
-			value (str): Value as string
-
-		"""
-
-		key = next((f"{i}" for i in kwargs.keys()))
-		value = f"{kwargs[key]}"
-
-		return key, value
+        return key, value

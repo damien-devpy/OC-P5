@@ -2,35 +2,33 @@
 
 from model.model import Model
 
+
 class Substitution(Model):
-	"""Model class of substitution table in database
-	"""
+    """Model class of substitution table in database."""
 
-	# Table name in database this model class represent
-	TABLE_NAME = "substitution"
+    # Table name in database this model class represent
+    TABLE_NAME = "substitution"
 
-	# How much columns this model class has as attributes
-	# in declaration order
-	COLUMNS = 3
+    # How much columns this model class has as attributes
+    # in declaration order
+    COLUMNS = 3
 
-	def __init__(self, **kwargs):
-		"""init method
+    def __init__(self, **kwargs):
+        """init method.
 
-		Args:
+        Args:
+            **kwargs (dict): Variable number of arguments
 
-			**kwargs (dict): Variable number of arguments
+        Attributes:
+            self._barre_code_to_substitute (int): attribute that represent
+                barre_code_to_substitute column in DB
+            self._barre_code_substitute (int): attribute that represent
+                barre_code_substitute column in DB
 
-		Attributes:
+        """
+        Model.__init__(self)
+        self._ignore = True
 
-			self._barre_code_to_substitute (int): attribute that represent barre_code_to_substitute column in DB
- 			self._barre_code_substitute (int): attribute that represent barre_code_substitute column in DB
-
-		"""
-
-		Model.__init__(self)
-		self._ignore = True
-
-		self.id = kwargs.get('id')
-		self.id_to_substitute = kwargs.get('id_to_substitute')
-		self.id_substitute = kwargs.get('id_substitute')
-
+        self.id = kwargs.get('id')
+        self.id_to_substitute = kwargs.get('id_to_substitute')
+        self.id_substitute = kwargs.get('id_substitute')
