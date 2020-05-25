@@ -68,9 +68,9 @@ class View:
 
             elif isinstance(list_of_items[0], Product):
                 print(f"\n{'Products':_^200}\n")
-                print(f"""{' Nom':<70} {'Nutriscore':<40}
-                      {'Brand':<40} {'Quantity'}
-                      """)
+                print(f"{' Nom':<70} {'Nutriscore':<40}"
+                      f"{'Brand':<40} {'Quantity'}"
+                      )
 
                 for i, item in enumerate(list_of_items):
                     line = (f"{i+1:>2} - {item.name:<70}"
@@ -98,15 +98,15 @@ class View:
             new_product = Product()
             new_product.get(id=item.id_substitute)
 
-            print(f"""\n{i+1} -
-                  {old_product.name} -
-                  Nutritrion grade: {old_product.nutrition_grade}
-                  """)
+            print(f"\n{i+1} -"
+                  f"{old_product.name} -"
+                  f"Nutritrion grade: {old_product.nutrition_grade}"
+                  )
             print(f"{'------>':<10}", end='')
-            print(f"""{new_product.name} -
-                  Nutritrion grade: {new_product.nutrition_grade}
-                  ({URL_FOR_PRODUCT + str(new_product.barre_code)})\n
-                  """)
+            print(f"{new_product.name} -"
+                  f"Nutritrion grade: {new_product.nutrition_grade}"
+                  f"({URL_FOR_PRODUCT + str(new_product.barre_code)})\n"
+                  )
 
     def details_menu(self, *item_to_detail):
         """In charge of printing details of an item.
@@ -124,11 +124,7 @@ class View:
             print(f"{'Nutrition grade: '+item.nutrition_grade:>2}\n")
             print(f"{'Brand: '+item.brand:>2}\n")
             print(f"{'Where to find it: '+item.store:>2}\n")
-            print(f"""{'Link to the product: '
-                  +URL_FOR_PRODUCT
-                  + str(item.barre_code):>2}\n
-                  """)
+            print(f"{'Link to the product: '+URL_FOR_PRODUCT+str(item.barre_code):>2}\n")
             print(f"{'Details: '+item.ingredients:>2}\n")
             print(f"{'_':_^200}")
-
             print()

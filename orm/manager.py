@@ -134,9 +134,7 @@ class Manager:
                             ):
         """Specific method for select data in DB throught a table liaison."""
         starting_table = class_ref_starting.TABLE_NAME
-
         key, value = self._get_where_clause(**kwargs)
-
         ending_table = class_ref_starting().liaison_table().TABLE_NAME
 
         # Getting columns of the ending table, represent by attributes of the
@@ -171,11 +169,9 @@ class Manager:
         tmp_list = list()
 
         for value in self._cursor.fetchall():
-
             tmp_object = class_ref_starting().liaison_table()
 
             for i, c in enumerate(tuple(ending_columns.split(', '))):
-
                 setattr(tmp_object, c, value[i])
 
             tmp_list.append(tmp_object)
@@ -199,37 +195,16 @@ class Manager:
                                             for c in columns.split(', ')
                                             )
 
-        query = f"""
-            SELECT {columns} FROM (
-                SELECT {columns_with_table_name}
-                FROM {product_object.TABLE_NAME}
-                INNER JOIN product_category
-                ON product.id = product_category.product_id
-                INNER JOIN category
-                ON product_category.category_id = category.id
-                INNER JOIN category as category_2
-                ON category.name = category_2.name
-                WHERE category_2.name = "{chosen_category}") as products
-            WHERE products.nutrition_grade < "{product_object.nutrition_grade}"
-            ORDER BY products.nutrition_grade
+        list_of_products = self.select_through_join(product_object.liaison_table, name=chosen_category)
 
-                """
+        for product in list_of_products:
 
-        self._cursor.execute(query)
+            if product.nutrition_grade < product_object.nutrition_grade:
 
-        # Making columns an iterable
-        columns = tuple(columns.split(', '))
-
-        # Getting first result of the query, i.e. product with better
-        # nutriscore
-        result = self._cursor.fetchmany(size=1)
-
-        # If a better product has been found
-        if result:
-
-            for i, value in enumerate(result[0]):
-
-                setattr(product_object, columns[i], value)
+                for attr, value in zip(product_object.attrs(),
+                                       product.values(),
+                                       ):
+                    setattr(product_object, attr, value)
 
     def _insert(self, object_to_insert):
         """In charge of create part of CRUD.
