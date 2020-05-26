@@ -103,12 +103,9 @@ class Catalogue:
     def _product_ok(self, product):
         """Check if product is ok regarding criterias in configuration file."""
         # We don't want empty fields in our catalogue
-        all_fields_are_complete = all(True if product[j] != '' else False
-                                      for j in product
-                                      )
+        all_fields_are_complete = all(bool(product[j] != '') for j in product)
 
         # Return True if the product is complete
-        # (len(KEYWORD) + 1, asking countries but not registering it)
         # all fields wanted and filled
         # and the right country
         # and the right language

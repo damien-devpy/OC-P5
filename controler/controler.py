@@ -14,7 +14,7 @@ from view.view import View
 class Controler():
     """Controler part of the app.
 
-    Manage inputs from user and iteraction between objects.
+    Manage inputs from user and interaction between objects.
 
     """
 
@@ -76,16 +76,18 @@ class Controler():
             self._main_menu()
 
     def _categories_menu(self):
-        """Manage the category menu of the app."""
+        """Manage the categories menu of the app."""
         self._page = 1
 
         # Getting list of categories from the database
         categories = self._manager.select(Category)
 
-        # Displaying categories in a sub menu
+        # Displaying categories in a sub menu considering current page
         categories_to_show = self._paging(categories)
         self._vue.sub_menu(categories_to_show)
 
+        # Allow the user to go through several categories
+        # For making a choice
         category_choosed = self._navigation(categories, self._main_menu)
 
         self._products_menu(category_choosed)
@@ -99,12 +101,16 @@ class Controler():
                                                      name=category_choosed.name
                                                      )
 
-        # Displaying products in a sub menu
+        # Displaying products in a sub menu considering current page
         products_to_show = self._paging(products)
         self._vue.sub_menu(products_to_show)
 
+        # Allow the user to go through several products
+        # for making a choice
         product_choosed = self._navigation(products, self._categories_menu)
 
+        # Display details of the chosen product to substitute
+        # and find a suitable one
         self._vue.old_product()
         self._vue.details_menu(product_choosed)
         self._find_substitute(product_choosed, category_choosed)
@@ -126,6 +132,7 @@ class Controler():
             input_user = input().lower()
 
             # If user want to save the substitution
+            # Record it
             if input_user == 'y':
                 substitution = Substitution(id_to_substitute=id_old_product,
                                             id_substitute=product_choosed.id,
@@ -173,6 +180,7 @@ class Controler():
             new_product = Product()
             new_product.get(id=sub_choosed.id_substitute)
 
+            # Display substitutions
             self._vue.details_menu(old_product, new_product)
 
             self._substitution_menu()
@@ -259,8 +267,10 @@ class Controler():
             list_of_items (list): Part of iterable matching the page asked
 
         """
+        # How much pages are contains in the iterable
         total_pages = self._get_total_pages(list_of_items)
 
+        # If user made a wrong input
         if not 1 <= self._page <= total_pages:
             self._fix_page_asked(total_pages)
 
@@ -287,7 +297,7 @@ class Controler():
         # How much (ITEMS_TO_SHOW) is in list_of_items
         how_much_to_show = len(list_of_items) // ITEMS_TO_SHOW
 
-        # Number of pages
+        # Number of pages, for instance:
         # A list containing 42 items is a 5 pages list if ITEMS_TO_SHOW = 10
         total_pages = (how_much_to_show + 1
                        if len(list_of_items) % ITEMS_TO_SHOW

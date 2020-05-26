@@ -53,7 +53,7 @@ class View:
         """Get information to print considering page asked.
 
         Args:
-            list_of_items (list): List of items to print
+            list_of_items (list): List of items to display
             sub (bool): Default to False. If True, list_of_items
                 is a list of substitution objects
 
@@ -98,14 +98,14 @@ class View:
             new_product = Product()
             new_product.get(id=item.id_substitute)
 
-            print(f"\n{i+1} -"
-                  f"{old_product.name} -"
-                  f"Nutritrion grade: {old_product.nutrition_grade}"
+            print(f"\n{i+1} - "
+                  f"{old_product.name} - "
+                  f"Nutritrion grade: {old_product.nutrition_grade}\n"
                   )
             print(f"{'------>':<10}", end='')
-            print(f"{new_product.name} -"
+            print(f"{new_product.name} - "
                   f"Nutritrion grade: {new_product.nutrition_grade}"
-                  f"({URL_FOR_PRODUCT + str(new_product.barre_code)})\n"
+                  f" ({URL_FOR_PRODUCT + str(new_product.barre_code)})\n"
                   )
 
     def details_menu(self, *item_to_detail):
@@ -115,6 +115,8 @@ class View:
             item_to_detail (iterable): An iterable to print
 
         """
+        print('Details product')
+
         for item in item_to_detail:
 
             print(f"{'_':_^200}")

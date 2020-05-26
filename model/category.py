@@ -1,12 +1,12 @@
 # coding: utf-8
-"""Child class of Model, representing table category in database."""
+"""Parent class of Model, representing table category in database."""
 
 from model.model import Model
 import model.product
 
 
 class Category(Model):
-    """Model class of the category table in database."""
+    """Class of the category table in database."""
 
     # Table name in database this model class represent
     TABLE_NAME = "category"

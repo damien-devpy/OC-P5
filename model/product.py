@@ -1,5 +1,5 @@
 # coding: utf-8
-"""Child class of Model, representing table product in database."""
+"""Parent class of Model, representing table product in database."""
 
 from model.model import Model
 from orm.manager import Manager
@@ -7,7 +7,7 @@ import model.category
 
 
 class Product(Model):
-    """Model class of the product table in database."""
+    """Class of the product table in database."""
 
     # Table name in database this model class represent
     TABLE_NAME = "product"
@@ -25,6 +25,7 @@ class Product(Model):
             self._nutrition_grade (str): attribute that represent
                 nutrition_grade column in DB
             self._brand (str): attribute that represent brand column in DB
+            self._store (str): attribute that represent store column in DB
             self._ingredients (str): attribute that represent ingredients
                 column in DB
             self._quantity (str): attribute that represent quantity column

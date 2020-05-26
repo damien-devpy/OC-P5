@@ -1,11 +1,11 @@
 # coding: utf-8
-"""Child class of Model, representing table substitution in database."""
+"""Parent class of Model, representing table substitution in database."""
 
 from model.model import Model
 
 
 class Substitution(Model):
-    """Model class of substitution table in database."""
+    """Class of substitution table in database."""
 
     # Table name in database this model class represent
     TABLE_NAME = "substitution"

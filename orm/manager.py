@@ -10,14 +10,14 @@ from model.keyworderror import KeywordError
 
 
 class Manager:
-    """In chage of managing data base."""
+    """In charge of managing data base."""
 
     def __init__(self):
-        """Init attributes of manager objets.
+        """Init attributes of manager objects.
 
         Attributes:
-            self._cnx (connect object): To connect to database
-            self._cursor (cursor object): To interact with database (CRUD)
+            self._cnx (connect object): Init connection to database
+            self._cursor (cursor object): Interact with database (CRUD)
 
         """
         self._cnx = connector.connect(**CREDENTIALS)
@@ -37,31 +37,28 @@ class Manager:
         """Check if database exist.
 
         Return:
-            bool: True if database exist, False otherwhise
+            bool: True if database exist, False otherwise
 
         """
         self._cursor.execute(f"SHOW DATABASES LIKE '{DATABASE_NAME}'")
         self._cursor.fetchall()
 
         # If self._cursor contain a result, database exist, return True
-        return self._cursor.rowcount
+        return bool(self._cursor.rowcount)
 
 
     def insert_all(self, list_of_objects):
-        """In charge of C part of CRUD (create), for a massive insert.
+        """In charge of create part of CRUD, for a massive insert.
 
         Args:
-            list_of_objects (list): A list of objects to insert at once in DB
+            list_of_objects (list): A list of objects to insert in DB
 
         """
         # Before inserting data in DB, checking if objects contains
         # a relation to any liaison table
-        relation_exist = self._is_there_relation(list_of_objects[0])
-
-        if relation_exist:
-
+        if self._is_there_relation(list_of_objects[0]):
+		
             for an_object in list_of_objects:
-
                 # Filling table with the current object
                 self._insert(an_object)
 
@@ -69,39 +66,37 @@ class Manager:
 
                 # Filling table for every objects in data_liaison_table
                 for liaison_object in data_liaison_table:
-
                     self._insert(liaison_object)
 
                 # After inserting every objects in their proper tables
                 # Filling the liaison table
                 self._filling_liaison_table(an_object, data_liaison_table)
-
+				
         else:
 
             for an_object in list_of_objects:
-
                 self._insert(an_object)
 
         self._cnx.commit()
 
     def insert_one_at_a_time(self, object_to_insert):
-        """In charge of C part of CRUD (create), for inserting data in DB.
+        """In charge of create part of CRUD, for inserting data in DB.
 
         Args:
             object_to_insert (model object): Model object to insert in database
 
         """
         self._insert(object_to_insert)
-
         self._cnx.commit()
 
     def select(self, an_object, column=None, **kwargs):
-        """In charge of R part of CRUD (read), for selecting data in DB.
+        """In charge of read part of CRUD, for selecting data in DB.
 
         Args:
-            class_ref: If select query is for a column or a table, an_object is
-                a class reference for the table in database. For a specific row
-                an_object will be a model object
+            an_object (class reference / model object) : If select query is
+				for a column or a table, an_object is a class reference
+				for the table in database. For a specific row an_object will
+				be a model object
 
             column (str): Default to None. Otherwise, meaning method has to
                 look for a specific column in the table DB
@@ -113,17 +108,20 @@ class Manager:
 
         # If a specific column is asked
         if column:
-
+			# Calling private method select_column
+			# with a class reference and a column name as arguments
             return self._select_column(an_object, column)
 
         # Elif, a specific row is asked
         elif kwargs:
-
+			# Calling private method select_row
+			# with a model object and a keyword to look for as arguments
             self._select_row(an_object, **kwargs)
 
         # Else, an entire table is asked
         else:
-
+			# Calling private method select_table
+			# witth a classe reference as argument
             return self._select_table(an_object)
 
         self._cnx.commit()
@@ -132,13 +130,16 @@ class Manager:
                             class_ref_starting,
                             **kwargs,
                             ):
-        """Specific method for select data in DB throught a table liaison."""
+        """Specific method to select data in DB through a table liaison."""
+		# Get name of the table in DB represent by the class reference
         starting_table = class_ref_starting.TABLE_NAME
-        key, value = self._get_where_clause(**kwargs)
+		# Same here, through the class reference contain in attribute liaison_table
         ending_table = class_ref_starting().liaison_table().TABLE_NAME
 
-        # Getting columns of the ending table, represent by attributes of the
-        # class reference
+        key, value = self._get_where_clause(**kwargs)
+
+        # Get columns of the ending table, represent by attributes of the
+        # class reference contain in attribute liaison_table
         ending_columns = ", ".join(class_ref_starting().liaison_table().attrs()
                                    )
 
@@ -148,10 +149,11 @@ class Manager:
                                          for c in ending_columns.split(", ")
                                          )
 
+		# Build up the liaison table name with each table name
         liaison_table_name = sorted([starting_table, ending_table])
-        liaison_table_name = (liaison_table_name[1] +
+        liaison_table_name = (liaison_table_name[0] +
                               "_" +
-                              liaison_table_name[0]
+                              liaison_table_name[1]
                               )
 
         query = (f'SELECT {ending_table_columns} FROM {ending_table} '
@@ -167,7 +169,8 @@ class Manager:
         self._cursor.execute(query)
 
         tmp_list = list()
-
+		
+		# Filling a list with all results
         for value in self._cursor.fetchall():
             tmp_object = class_ref_starting().liaison_table()
 
@@ -190,21 +193,19 @@ class Manager:
                 looking for a product to substitute
 
         """
-        columns = ", ".join(product_object.attrs())
-        columns_with_table_name = ', '.join(f"{product_object.TABLE_NAME}.{c}"
-                                            for c in columns.split(', ')
-                                            )
+		# Get all products from the category choose by user
+        list_of_products = self.select_through_join(product_object.liaison_table,
+													name=chosen_category,
+													)
 
-        list_of_products = self.select_through_join(product_object.liaison_table, name=chosen_category)
+        # Sort the list of products by nutrition grade
+        list_of_products.sort(key=(lambda product: product.nutrition_grade))
 
-        for product in list_of_products:
-
-            if product.nutrition_grade < product_object.nutrition_grade:
-
-                for attr, value in zip(product_object.attrs(),
-                                       product.values(),
-                                       ):
-                    setattr(product_object, attr, value)
+        # Get the first one of the list, i.e. product with best nutrition grade
+        for attr, value in zip(product_object.attrs(),
+                               list_of_products[0].values(),
+                               ):
+            setattr(product_object, attr, value)
 
     def _insert(self, object_to_insert):
         """In charge of create part of CRUD.
@@ -227,14 +228,12 @@ class Manager:
             query = (f'INSERT INTO {table} ({columns})'
                      f'VALUES ({replacement}) {duplicate_key}'
                      )
-
         # Elif there is a ignore attribute
         elif object_to_insert.ignore:
 
             query = (f'INSERT IGNORE INTO {table} ({columns})'
                      f'VALUES ({replacement})'
                      )
-
         else:
 
             query = f'INSERT INTO {table} ({columns}) VALUES ({replacement})'
@@ -248,23 +247,20 @@ class Manager:
         """Private method for reading a specific column in DB.
 
         Args:
-            class_ref (class): Reference to the class model representing a
-                table in database, on which the search has to be done
+            class_ref (class reference): Reference to the class model
+				representing a table in database, on which the search has to be
+				done
             columns (str): Specific column to look for in the table
 
         """
         table = class_ref.TABLE_NAME
-
         self._cursor.execute(f"SELECT {column} FROM {table}")
-
         tmp_list = list()
 
         for value in self._cursor.fetchall():
 
             tmp_object = class_ref()
-
             setattr(tmp_object, column, value[0])
-
             tmp_list.append(tmp_object)
 
         return tmp_list
@@ -281,22 +277,16 @@ class Manager:
         table = object_to_read.TABLE_NAME
         columns = ", ".join(object_to_read.attrs())
 
-        # Building where clause from the keyword argument
-        # key = next((f"{i}" for i in kwargs.keys()))
-        # value = f"{kwargs[key]}"
-
         key, value = self._get_where_clause(**kwargs)
 
         query = f"SELECT {columns} FROM {table} WHERE {key}='{value}'"
-
         self._cursor.execute(query)
-
         # Getting the result of the query
         result = self._cursor.fetchone()
 
         # If keyword asked doesn't exist in database
         try:
-            if self._cursor.rowcount == -1:
+            if not self._cursor.rowcount:
                 raise KeywordError(f'{key} : {value}'
                                    'doesn\'t exist in database !'
                                    )
@@ -305,7 +295,6 @@ class Manager:
             print(err)
 
         else:
-
             # Filling attributes object with result
             for i, c in enumerate(tuple(columns.split(", "))):
                 setattr(object_to_read, c, result[i])
@@ -322,7 +311,6 @@ class Manager:
         columns = ", ".join(class_ref().attrs())
 
         self._cursor.execute(f"SELECT {columns} FROM {table}")
-
         list_of_objects = list()
 
         for values in self._cursor.fetchall():
@@ -343,11 +331,11 @@ class Manager:
         Args:
             object_linked (model object): Model object linked to the liaison
                 table by a many to many relation
-            liaison_data (list): Model objects to insert in
-            the liaison table with the object_linked
+            liaison_data (list): List of model objects to insert in
+				the liaison table with the object_linked
 
         """
-        table = object_linked.TABLE_NAME + '_' + liaison_data[0].TABLE_NAME
+        table = liaison_data[0].TABLE_NAME + '_' + object_linked.TABLE_NAME
         columns = (f'{object_linked.TABLE_NAME}' +
                    '_id' +
                    ', ' +
@@ -356,7 +344,6 @@ class Manager:
                    )
 
         replacement = self._get_placeholders(len(tuple(columns.split(', '))))
-
         list_of_values = list()
 
         # For each object in liaison data
@@ -371,26 +358,23 @@ class Manager:
         self._cursor.executemany(query, list_of_values)
 
     def _is_there_relation(self, object_to_inspect):
-        """Return a type list attr.
-
-        Represent a many to many relation.
+        """Check if a many to many relation exists.
 
         Args:
             object_to_inspect (model object): Model object to inspect
-
-
+			
         Return:
-            Bool: Return True if there is many to many relation, False
+            bool: Return True if there is many to many relation, False
                 otherwise
 
         """
-        return object_to_inspect.belong_to
+        return bool(object_to_inspect.belong_to)
 
     def _get_liaison_data(self, object_to_inspect):
         """Get back data from a many to many relation attribute.
 
         Args:
-            object_to_inspect (model object): Model object inspect
+            object_to_inspect (model object): Model object to inspect
 
         Return:
             object_to_inspect.belong_to (list): List containing data
@@ -406,8 +390,7 @@ class Manager:
             reference (int): How much sql placeholders needs to be define
 
         Returns:
-            placeholders (tuple): Same size tuple as values, containing sql
-                placeholders
+            placeholders (str): SQL placeholders
 
         """
         return ", ".join('%s' for i in range(reference))

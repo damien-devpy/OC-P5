@@ -45,14 +45,14 @@ COUNTRY = 'France'
 CATEGORIES_LC = 'fr'
 
 # Products will be from this categories
-CATEGORIES_TO_SCRAPE = {'rillettes-de-canard',
-                        'yaourts-sucres',
-                        'petits-beurres',
-                        'camemberts',
-                        'quatre-quarts'
+CATEGORIES_TO_SCRAPE = {'tapas',
+                        'produits-a-tartiner-sales',
+                        'plats-prepares-en-conserve',
+                        'aperitif',
+                        'pizzas'
                         }
 
-PAGE_SIZE = 500
+PAGE_SIZE = 1000
 
 # Switching keywords of the API for the app's own kw
 KEYWORDS = {'code': 'barre_code',

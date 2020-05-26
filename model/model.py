@@ -1,11 +1,11 @@
 # coding: utf-8
-"""Mother class for child class representing table in database."""
+"""Parent class for child class representing table in database."""
 
 from orm.manager import Manager
 
 
 class Model:
-    """Model class representing table database."""
+    """Parent model class representing table database."""
 
     # How much attributes are define for DB behaviour
     DB_ATTRIBUTES = 4
