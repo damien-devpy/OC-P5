@@ -68,6 +68,10 @@ class Controler():
         elif input_user == '2':
             self._substitution_menu()
 
+        elif input_user == 'help':
+            self._vue.help_menu()
+            self._main_menu()
+
         elif input_user == 'exit':
             sys_exit()
 
@@ -228,6 +232,11 @@ class Controler():
         # Get back to the main menu
         elif input_user == 'main':
             self._main_menu()
+
+        # Display help menu
+        elif input_user == 'help':
+            self._vue.help_menu()
+            return self._navigation(items, func_reference, sub)
 
         # Exit the app
         elif input_user == 'exit':

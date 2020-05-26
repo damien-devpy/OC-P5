@@ -46,7 +46,6 @@ class Manager:
         # If self._cursor contain a result, database exist, return True
         return bool(self._cursor.rowcount)
 
-
     def insert_all(self, list_of_objects):
         """In charge of create part of CRUD, for a massive insert.
 
@@ -57,7 +56,7 @@ class Manager:
         # Before inserting data in DB, checking if objects contains
         # a relation to any liaison table
         if self._is_there_relation(list_of_objects[0]):
-		
+
             for an_object in list_of_objects:
                 # Filling table with the current object
                 self._insert(an_object)
@@ -71,7 +70,7 @@ class Manager:
                 # After inserting every objects in their proper tables
                 # Filling the liaison table
                 self._filling_liaison_table(an_object, data_liaison_table)
-				
+
         else:
 
             for an_object in list_of_objects:
@@ -94,9 +93,9 @@ class Manager:
 
         Args:
             an_object (class reference / model object) : If select query is
-				for a column or a table, an_object is a class reference
-				for the table in database. For a specific row an_object will
-				be a model object
+                for a column or a table, an_object is a class reference
+                for the table in database. For a specific row an_object will
+                be a model object
 
             column (str): Default to None. Otherwise, meaning method has to
                 look for a specific column in the table DB
@@ -108,20 +107,20 @@ class Manager:
 
         # If a specific column is asked
         if column:
-			# Calling private method select_column
-			# with a class reference and a column name as arguments
+            # Calling private method select_column
+            # with a class reference and a column name as arguments
             return self._select_column(an_object, column)
 
         # Elif, a specific row is asked
         elif kwargs:
-			# Calling private method select_row
-			# with a model object and a keyword to look for as arguments
+            # Calling private method select_row
+            # with a model object and a keyword to look for as arguments
             self._select_row(an_object, **kwargs)
 
         # Else, an entire table is asked
         else:
-			# Calling private method select_table
-			# witth a classe reference as argument
+            # Calling private method select_table
+            # witth a classe reference as argument
             return self._select_table(an_object)
 
         self._cnx.commit()
@@ -131,9 +130,10 @@ class Manager:
                             **kwargs,
                             ):
         """Specific method to select data in DB through a table liaison."""
-		# Get name of the table in DB represent by the class reference
+        # Get name of the table in DB represent by the class reference
         starting_table = class_ref_starting.TABLE_NAME
-		# Same here, through the class reference contain in attribute liaison_table
+        # Same here, through the class reference contain
+        # in attribute liaison_table
         ending_table = class_ref_starting().liaison_table().TABLE_NAME
 
         key, value = self._get_where_clause(**kwargs)
@@ -149,7 +149,7 @@ class Manager:
                                          for c in ending_columns.split(", ")
                                          )
 
-		# Build up the liaison table name with each table name
+        # Build up the liaison table name with each table name
         liaison_table_name = sorted([starting_table, ending_table])
         liaison_table_name = (liaison_table_name[0] +
                               "_" +
@@ -169,8 +169,8 @@ class Manager:
         self._cursor.execute(query)
 
         tmp_list = list()
-		
-		# Filling a list with all results
+
+        # Filling a list with all results
         for value in self._cursor.fetchall():
             tmp_object = class_ref_starting().liaison_table()
 
@@ -181,31 +181,31 @@ class Manager:
 
         return tmp_list
 
-    def substitution(self, product_object, chosen_category):
+    def substitution(self, product_obj, chosen_category):
         """Specifically in charge for looking a product substitution.
 
         Substitution occur IN PLACE.
 
         Args:
-            product_object (model object): Product choosed by user for looking
+            product_obj (model object): Product choosed by user for looking
                 to a substitute
             chosen_category (str): Category choosed by user for
                 looking for a product to substitute
 
         """
-		# Get all products from the category choose by user
-        list_of_products = self.select_through_join(product_object.liaison_table,
-													name=chosen_category,
-													)
+        # Get all products from the category choose by user
+        list_of_products = self.select_through_join(product_obj.liaison_table,
+                                                    name=chosen_category,
+                                                    )
 
         # Sort the list of products by nutrition grade
         list_of_products.sort(key=(lambda product: product.nutrition_grade))
 
         # Get the first one of the list, i.e. product with best nutrition grade
-        for attr, value in zip(product_object.attrs(),
+        for attr, value in zip(product_obj.attrs(),
                                list_of_products[0].values(),
                                ):
-            setattr(product_object, attr, value)
+            setattr(product_obj, attr, value)
 
     def _insert(self, object_to_insert):
         """In charge of create part of CRUD.
@@ -248,8 +248,8 @@ class Manager:
 
         Args:
             class_ref (class reference): Reference to the class model
-				representing a table in database, on which the search has to be
-				done
+                representing a table in database, on which the search has to be
+                done
             columns (str): Specific column to look for in the table
 
         """
@@ -332,7 +332,7 @@ class Manager:
             object_linked (model object): Model object linked to the liaison
                 table by a many to many relation
             liaison_data (list): List of model objects to insert in
-				the liaison table with the object_linked
+                the liaison table with the object_linked
 
         """
         table = liaison_data[0].TABLE_NAME + '_' + object_linked.TABLE_NAME
@@ -362,7 +362,7 @@ class Manager:
 
         Args:
             object_to_inspect (model object): Model object to inspect
-			
+
         Return:
             bool: Return True if there is many to many relation, False
                 otherwise

@@ -115,10 +115,9 @@ class View:
             item_to_detail (iterable): An iterable to print
 
         """
-        print('Details product')
-
         for item in item_to_detail:
 
+            print('\nDetails product')
             print(f"{'_':_^200}")
             print(f"{'Barre code: ':>2}", end='')
             print(f"{item.barre_code}\n")
@@ -126,7 +125,7 @@ class View:
             print(f"{'Nutrition grade: '+item.nutrition_grade:>2}\n")
             print(f"{'Brand: '+item.brand:>2}\n")
             print(f"{'Where to find it: '+item.store:>2}\n")
-            print(f"{'Link to the product: '+URL_FOR_PRODUCT+str(item.barre_code):>2}\n")
+            print(f"{'URL: '+URL_FOR_PRODUCT+str(item.barre_code):>2}\n")
             print(f"{'Details: '+item.ingredients:>2}\n")
             print(f"{'_':_^200}")
             print()
