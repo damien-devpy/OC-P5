@@ -1,7 +1,7 @@
 # Find out safest food products
 ## OpenClassrooms - my 5th project for OC Python Path
 
-![alt][text](https://static.openfoodfacts.org/images/misc/openfoodfacts-logo-fr-178x150.png "OpenFoodFacts Logo"
+![alt][text](https://static.openfoodfacts.org/images/misc/openfoodfacts-logo-fr-178x150.png "OpenFoodFacts Logo")
 
 This app is about finding safest, healthy products by using the french database OpenFoodFacts.
 
