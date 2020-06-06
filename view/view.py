@@ -26,7 +26,7 @@ class View:
     def save_substitute(self):
         """Ask user if he want to save current substitution."""
         print(f"{'_':_^200}")
-        print("Do you want to save this substitution ?", end=' ')
+        print('Do you want to save this substitution ?', end=' ')
         print("('y' for yes)\n")
 
     def better_product(self):
@@ -48,6 +48,19 @@ class View:
     def new_product(self):
         """Display new product mention."""
         print(f"{'New product':_^200}")
+
+    def database_exists(self):
+        """Inform user a localdata already exists
+
+        Return:
+
+            input (str): User choice for dropping or not local database
+
+        """
+        
+        return input('\nA local database has been found. ' 
+                     "Do you want to drop it ? ('y' for yes)\n"
+                     )
 
     def sub_menu(self, list_of_items, sub=False):
         """Get information to print considering page asked.

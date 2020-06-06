@@ -31,7 +31,7 @@ class Manager:
 
     def set_db(self):
         """Set to current data base."""
-        self._cursor.execute(f"USE {DATABASE_NAME}")
+        self._cursor.execute(f'USE {DATABASE_NAME}')
 
     def is_there_db(self):
         """Check if database exist.
@@ -40,11 +40,15 @@ class Manager:
             bool: True if database exist, False otherwise
 
         """
-        self._cursor.execute(f"SHOW DATABASES LIKE '{DATABASE_NAME}'")
+        self._cursor.execute(f'SHOW DATABASES LIKE "{DATABASE_NAME}"')
         self._cursor.fetchall()
 
         # If self._cursor contain a result, database exist, return True
         return bool(self._cursor.rowcount)
+
+    def drop_db(self):
+        """Drop local database"""
+        self._cursor.execute(f'DROP DATABASE {DATABASE_NAME}')
 
     def insert_all(self, list_of_objects):
         """In charge of create part of CRUD, for a massive insert.

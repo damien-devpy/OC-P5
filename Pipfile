@@ -8,9 +8,3 @@ verify_ssl = true
 [packages]
 requests = "*"
 mysql-connector-python = "*"
-flake8 = "*"
-pydocstyle = "*"
-pylint = "*"
-
-[requires]
-python_version = "3.8"

@@ -42,14 +42,20 @@ class Controler():
         """
         # If database doesn't exist
         if not self._manager.is_there_db():
-            # Getting data from the OpenFoodFacts API
-            self._catalogue.get_data()
+            # Create and filling it
+            self._create_fill_db()
 
-            # Creating database
-            self._manager.create_db()
+        else:
 
-            # Inserting data in database
-            self._manager.insert_all(self._catalogue.catalogue)
+            # Inform user there is already a local database
+            drop_db = self._vue.database_exists()
+
+            # If user want to drop local database
+            if drop_db.lower() == 'y':
+                # Drop the database
+                self._manager.drop_db()
+                # Create and filling again with new data
+                self._create_fill_db()
 
         self._manager.set_db()
 
@@ -353,3 +359,14 @@ class Controler():
                )
 
         return start, end
+
+    def _create_fill_db(self):
+        """Create and fill a local database with OFF data"""
+        # Getting data from the OpenFoodFacts API
+        self._catalogue.get_data()
+
+        # Creating database
+        self._manager.create_db()
+
+        # Inserting data in database
+        self._manager.insert_all(self._catalogue.catalogue)

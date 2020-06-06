@@ -5,10 +5,11 @@
 DATABASE = 'orm/create_db.sql'
 DATABASE_NAME = 'alimentation'
 
+# Credentials used by mysql-connector to connect to MySQL
 CREDENTIALS = {'user': 'user', 'password': 'user', 'host': 'localhost'}
 
 # Header for the API
-HEADER = {'User-Agent': 'OFF App in progress - v0.1'}
+HEADER = {'User-Agent': 'OpenFoodFacts App - v1'}
 
 # Tags for url
 TAGS = {'action': 'process',
