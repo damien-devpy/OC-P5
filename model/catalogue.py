@@ -157,5 +157,3 @@ class Catalogue:
         product_obj.store = product_obj.store.split(',')[0]
 
         return product_obj
-
-

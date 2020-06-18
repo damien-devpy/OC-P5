@@ -113,8 +113,8 @@ class Controler():
         with Manager() as manager:
             manager.set_db()
             products = manager.select_through_join(Category,
-                                                         name=cat_choosed.name
-                                                         )
+                                                   name=cat_choosed.name
+                                                   )
 
         # Displaying products in a sub menu considering current page
         products_to_show = self._paging(products)

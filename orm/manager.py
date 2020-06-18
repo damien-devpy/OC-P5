@@ -13,7 +13,7 @@ class Manager:
     """In charge of managing data base."""
 
     def __enter__(self):
-        """Starting a context manager for database and cursor.
+        """Start a context manager for database and cursor.
 
         Enabling a database connexion, creating a cursor.
 
@@ -135,7 +135,6 @@ class Manager:
             # Calling private method select_table
             # witth a classe reference as argument
             return self._select_table(an_object)
-
 
     def select_through_join(self,
                             class_ref_starting,

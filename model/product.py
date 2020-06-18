@@ -46,7 +46,7 @@ class Product(Model):
 
     @property
     def id(self):
-        """Return private attribute id"""
+        """Return private attribute id."""
         return self._id
 
     @id.setter
@@ -55,7 +55,7 @@ class Product(Model):
 
     @property
     def barre_code(self):
-        """Return private attribute barre_code"""
+        """Return private attribute barre_code."""
         return self._barre_code
 
     @barre_code.setter
@@ -64,7 +64,7 @@ class Product(Model):
 
     @property
     def name(self):
-        """Return private attribute name"""
+        """Return private attribute name."""
         return self._name
 
     @name.setter
@@ -73,7 +73,7 @@ class Product(Model):
 
     @property
     def nutrition_grade(self):
-        """Return private attribute nutrition_grade"""
+        """Return private attribute nutrition_grade."""
         return self._nutrition_grade
 
     @nutrition_grade.setter
@@ -82,7 +82,7 @@ class Product(Model):
 
     @property
     def brand(self):
-        """Return private attribute brand"""
+        """Return private attribute brand."""
         return self._brand
 
     @brand.setter
@@ -91,7 +91,7 @@ class Product(Model):
 
     @property
     def store(self):
-        """Return private attribute store"""
+        """Return private attribute store."""
         return self._store
 
     @store.setter
@@ -100,7 +100,7 @@ class Product(Model):
 
     @property
     def ingredients(self):
-        """Return private attribute ingredients"""
+        """Return private attribute ingredients."""
         return self._ingredients
 
     @ingredients.setter
@@ -109,12 +109,12 @@ class Product(Model):
 
     @property
     def quantity(self):
-        """Return private attribute quantity"""
+        """Return private attribute quantity."""
         return self._quantity
 
     @quantity.setter
     def quantity(self, value):
-        self._quantity = value        
+        self._quantity = value
 
     def get_substitute(self, chosen_category):
         """Look for a product substitute.

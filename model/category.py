@@ -31,7 +31,7 @@ class Category(Model):
 
     @property
     def id(self):
-        """Return private attribute id"""
+        """Return private attribute id."""
         return self._id
 
     @id.setter
@@ -40,6 +40,7 @@ class Category(Model):
 
     @property
     def name(self):
+        """Return private attribute name."""
         return self._name
 
     @name.setter

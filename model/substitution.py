@@ -32,7 +32,7 @@ class Substitution(Model):
 
     @property
     def id(self):
-        """Return private attribute id"""
+        """Return private attribute id."""
         return self._id
 
     @id.setter
@@ -41,7 +41,7 @@ class Substitution(Model):
 
     @property
     def id_to_substitute(self):
-        """Return private attribute id_to_substutite"""
+        """Return private attribute id_to_substutite."""
         return self._id_to_substitute
 
     @id_to_substitute.setter
@@ -50,11 +50,9 @@ class Substitution(Model):
 
     @property
     def id_substitute(self):
-        """Return private attribute id_to_substutite"""
+        """Return private attribute id_to_substutite."""
         return self._id_substitute
 
     @id_substitute.setter
     def id_substitute(self, value):
         self._id_substitute = value
-
-        
