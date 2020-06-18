@@ -47,6 +47,11 @@ class Catalogue:
         self._re_dash = re_compile(r'[-]')
         self._re_underscores = re_compile(r'[_]')
 
+    @property
+    def catalogue(self):
+        """Return list private attribute."""
+        return self._catalogue
+
     def get_data(self):
         """In charge of calling the API and receiving raw data."""
         for category in CATEGORIES_TO_SCRAPE:
@@ -153,7 +158,4 @@ class Catalogue:
 
         return product_obj
 
-    @property
-    def catalogue(self):
-        """Return list private attribute."""
-        return self._catalogue
+

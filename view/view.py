@@ -50,15 +50,13 @@ class View:
         print(f"{'New product':_^200}")
 
     def database_exists(self):
-        """Inform user a localdata already exists
+        """Inform user a localdata already exists.
 
         Return:
-
             input (str): User choice for dropping or not local database
 
         """
-        
-        return input('\nA local database has been found. ' 
+        return input('\nA local database has been found. '
                      "Do you want to drop it ? ('y' for yes)\n"
                      )
 

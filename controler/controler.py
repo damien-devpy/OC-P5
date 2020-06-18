@@ -29,7 +29,6 @@ class Controler():
 
         """
         self._catalogue = Catalogue()
-        self._manager = Manager()
         self._vue = View()
 
         self._page = None
@@ -40,24 +39,26 @@ class Controler():
         Manage every part of the menu and interaction between objects.
 
         """
-        # If database doesn't exist
-        if not self._manager.is_there_db():
-            # Create and filling it
-            self._create_fill_db()
+        with Manager() as manager:
 
-        else:
-
-            # Inform user there is already a local database
-            drop_db = self._vue.database_exists()
-
-            # If user want to drop local database
-            if drop_db.lower() == 'y':
-                # Drop the database
-                self._manager.drop_db()
-                # Create and filling again with new data
+            # If database doesn't exist
+            if not manager.is_there_db():
+                # Create and filling it
                 self._create_fill_db()
 
-        self._manager.set_db()
+            else:
+
+                # Inform user there is already a local database
+                drop_db = self._vue.database_exists()
+
+                # If user want to drop local database
+                if drop_db.lower() == 'y':
+                    # Drop the database
+                    manager.drop_db()
+                    # Create and filling again with new data
+                    self._create_fill_db()
+
+            manager.set_db()
 
         self._vue.help_menu()
         self._main_menu()
@@ -90,7 +91,9 @@ class Controler():
         self._page = 1
 
         # Getting list of categories from the database
-        categories = self._manager.select(Category)
+        with Manager() as manager:
+            manager.set_db()
+            categories = manager.select(Category)
 
         # Displaying categories in a sub menu considering current page
         categories_to_show = self._paging(categories)
@@ -102,14 +105,16 @@ class Controler():
 
         self._products_menu(category_choosed)
 
-    def _products_menu(self, category_choosed):
+    def _products_menu(self, cat_choosed):
         """Manage the product menu of the app."""
         self._page = 1
 
         # Getting list of products from the category choosed
-        products = self._manager.select_through_join(Category,
-                                                     name=category_choosed.name
-                                                     )
+        with Manager() as manager:
+            manager.set_db()
+            products = manager.select_through_join(Category,
+                                                         name=cat_choosed.name
+                                                         )
 
         # Displaying products in a sub menu considering current page
         products_to_show = self._paging(products)
@@ -123,7 +128,7 @@ class Controler():
         # and find a suitable one
         self._vue.old_product()
         self._vue.details_menu(product_choosed)
-        self._find_substitute(product_choosed, category_choosed)
+        self._find_substitute(product_choosed, cat_choosed)
 
     def _find_substitute(self, product_choosed, category_choosed):
         """Find substitute for a product choose by user."""
@@ -173,7 +178,9 @@ class Controler():
         """Manage the substitute menu of the app."""
         self._page = 1
 
-        substitutions = self._manager.select(Substitution)
+        with Manager() as manager:
+            manager.set_db()
+            substitutions = manager.select(Substitution)
 
         # If there is some data in database:
         if substitutions:
@@ -361,12 +368,13 @@ class Controler():
         return start, end
 
     def _create_fill_db(self):
-        """Create and fill a local database with OFF data"""
+        """Create and fill a local database with OFF data."""
         # Getting data from the OpenFoodFacts API
         self._catalogue.get_data()
 
-        # Creating database
-        self._manager.create_db()
+        with Manager() as manager:
+            # Creating database
+            manager.create_db()
 
-        # Inserting data in database
-        self._manager.insert_all(self._catalogue.catalogue)
+            # Inserting data in database
+            manager.insert_all(self._catalogue.catalogue)

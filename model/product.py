@@ -35,14 +35,86 @@ class Product(Model):
         Model.__init__(self)
         self._liaison_table = model.category.Category
 
-        self.id = kwargs.get('id')
-        self.barre_code = kwargs.get('barre_code')
-        self.name = kwargs.get('name')
-        self.nutrition_grade = kwargs.get('nutrition_grade')
-        self.brand = kwargs.get('brand')
-        self.store = kwargs.get('store')
-        self.ingredients = kwargs.get('ingredients')
-        self.quantity = kwargs.get('quantity')
+        self._id = kwargs.get('id')
+        self._barre_code = kwargs.get('barre_code')
+        self._name = kwargs.get('name')
+        self._nutrition_grade = kwargs.get('nutrition_grade')
+        self._brand = kwargs.get('brand')
+        self._store = kwargs.get('store')
+        self._ingredients = kwargs.get('ingredients')
+        self._quantity = kwargs.get('quantity')
+
+    @property
+    def id(self):
+        """Return private attribute id"""
+        return self._id
+
+    @id.setter
+    def id(self, value):
+        self._id = value
+
+    @property
+    def barre_code(self):
+        """Return private attribute barre_code"""
+        return self._barre_code
+
+    @barre_code.setter
+    def barre_code(self, value):
+        self._barre_code = value
+
+    @property
+    def name(self):
+        """Return private attribute name"""
+        return self._name
+
+    @name.setter
+    def name(self, value):
+        self._name = value
+
+    @property
+    def nutrition_grade(self):
+        """Return private attribute nutrition_grade"""
+        return self._nutrition_grade
+
+    @nutrition_grade.setter
+    def nutrition_grade(self, value):
+        self._nutrition_grade = value
+
+    @property
+    def brand(self):
+        """Return private attribute brand"""
+        return self._brand
+
+    @brand.setter
+    def brand(self, value):
+        self._brand = value
+
+    @property
+    def store(self):
+        """Return private attribute store"""
+        return self._store
+
+    @store.setter
+    def store(self, value):
+        self._store = value
+
+    @property
+    def ingredients(self):
+        """Return private attribute ingredients"""
+        return self._ingredients
+
+    @ingredients.setter
+    def ingredients(self, value):
+        self._ingredients = value
+
+    @property
+    def quantity(self):
+        """Return private attribute quantity"""
+        return self._quantity
+
+    @quantity.setter
+    def quantity(self, value):
+        self._quantity = value        
 
     def get_substitute(self, chosen_category):
         """Look for a product substitute.
@@ -52,7 +124,6 @@ class Product(Model):
                 substitution
 
         """
-        manager = Manager()
-        manager.set_db()
-
-        manager.substitution(self, chosen_category)
+        with Manager() as manager:
+            manager.set_db()
+            manager.substitution(self, chosen_category)

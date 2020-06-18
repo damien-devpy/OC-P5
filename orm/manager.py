@@ -12,16 +12,27 @@ from model.keyworderror import KeywordError
 class Manager:
     """In charge of managing data base."""
 
-    def __init__(self):
-        """Init attributes of manager objects.
+    def __enter__(self):
+        """Starting a context manager for database and cursor.
 
-        Attributes:
-            self._cnx (connect object): Init connection to database
-            self._cursor (cursor object): Interact with database (CRUD)
+        Enabling a database connexion, creating a cursor.
 
         """
         self._cnx = connector.connect(**CREDENTIALS)
         self._cursor = self._cnx.cursor()
+
+        return self
+
+    def __exit__(self, *args):
+        """Exit the context manager.
+
+        Closing cursor and connection database.
+
+        """
+        self._cursor.close()
+        self._cnx.close()
+
+        return False
 
     def create_db(self):
         """Create the database from a sql file."""
@@ -47,7 +58,7 @@ class Manager:
         return bool(self._cursor.rowcount)
 
     def drop_db(self):
-        """Drop local database"""
+        """Drop local database."""
         self._cursor.execute(f'DROP DATABASE {DATABASE_NAME}')
 
     def insert_all(self, list_of_objects):
@@ -107,8 +118,6 @@ class Manager:
             **kwargs (dict): Keyword argument for looking a specific row
 
         """
-        self._cursor.execute("START TRANSACTION")
-
         # If a specific column is asked
         if column:
             # Calling private method select_column
@@ -127,7 +136,6 @@ class Manager:
             # witth a classe reference as argument
             return self._select_table(an_object)
 
-        self._cnx.commit()
 
     def select_through_join(self,
                             class_ref_starting,

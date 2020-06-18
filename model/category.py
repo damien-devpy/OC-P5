@@ -26,5 +26,22 @@ class Category(Model):
         self._duplicate_key = True
         self._liaison_table = model.product.Product
 
-        self.id = kwargs.get('id')
-        self.name = kwargs.get('name')
+        self._id = kwargs.get('id')
+        self._name = kwargs.get('name')
+
+    @property
+    def id(self):
+        """Return private attribute id"""
+        return self._id
+
+    @id.setter
+    def id(self, value):
+        self._id = value
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, value):
+        self._name = value

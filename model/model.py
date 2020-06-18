@@ -30,34 +30,30 @@ class Model:
 
         """
         self._duplicate_key = False
-
         self._ignore = False
-
         self._belong_to = list()
-
         self._liaison_table = None
 
     def save(self):
         """Insert data through the manager."""
-        manager = Manager()
-        manager.set_db()
-
-        manager.insert_one_at_a_time(self)
+        with Manager() as manager:
+            manager.set_db()
+            manager.insert_one_at_a_time(self)
 
     def get(self, **kwargs):
         """Get data from a specific key/value keyword argument."""
-        manager = Manager()
-        manager.set_db()
-
-        manager.select(self, **kwargs)
+        with Manager() as manager:
+            manager.set_db()
+            manager.select(self, **kwargs)
 
     def attrs(self):
         """Return an iterator of attributes names of self.
 
-        Only attributes representing columns in DB.
+        Only attributes representing columns in DB, without their private
+        underscore.
 
         """
-        return (attr
+        return (attr[1:]
                 for i, attr in enumerate(self.__dict__.keys())
                 if i >= Model.DB_ATTRIBUTES)
 
