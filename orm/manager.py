@@ -12,15 +12,19 @@ from model.keyworderror import KeywordError
 class Manager:
     """In charge of managing data base."""
 
-    def __enter__(self):
-        """Start a context manager for database and cursor.
+    def __init__(self):
+        """Init attributes of manager objects.
 
-        Enabling a database connexion, creating a cursor.
+        Attributes:
+            self._cnx (connect object): Init connection to database
+            self._cursor (cursor object): Interact with database (CRUD)
 
         """
         self._cnx = connector.connect(**CREDENTIALS)
         self._cursor = self._cnx.cursor()
 
+    def __enter__(self):
+        """Start a context manager for database and cursor."""
         return self
 
     def __exit__(self, *args):
