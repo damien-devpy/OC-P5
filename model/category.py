@@ -1,5 +1,5 @@
 # coding: utf-8
-"""Parent class of Model, representing table category in database."""
+"""Child class of Model, representing table category in database."""
 
 from model.model import Model
 import model.product

@@ -1,5 +1,5 @@
 # coding: utf-8
-"""Parent class of Model, representing table product in database."""
+"""Child class of Model, representing table product in database."""
 
 from model.model import Model
 from orm.manager import Manager
